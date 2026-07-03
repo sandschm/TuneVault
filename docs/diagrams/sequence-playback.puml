@@ -1,0 +1,22 @@
+@startuml sequence-playback
+title Playing a Song / Album / Playlist
+
+actor User
+participant "React SPA" as SPA
+participant "PlayerContext" as Player
+participant "HTML5 <audio>" as Audio
+participant "tracks route" as Tracks
+collections "File system\n/data/music" as FS
+
+User -> SPA : double-click row / click Play
+SPA -> Player : playTracks(trackList, startIndex)
+Player -> Audio : src = /api/tracks/:id/stream; play()
+Audio -> Tracks : GET /stream (Range: bytes=...)
+Tracks -> FS : read audio file
+Tracks --> Audio : 206 Partial Content
+Audio --> User : sound + progress updates
+...song ends...
+Audio -> Player : "ended" event
+Player -> Player : pick next index\n(shuffle / repeat aware)
+Player -> Audio : src = next track; play()
+@enduml

@@ -1,0 +1,32 @@
+@startuml sequence-enrichment
+title Completing Missing Metadata via Open APIs
+
+actor User
+participant "React SPA" as SPA
+participant "tracks route" as Tracks
+participant "metadataLookupService" as Lookup
+participant "iTunes Search API" as ITunes
+participant "MusicBrainz /\nCover Art Archive" as MB
+participant "artworkService" as Art
+database "SQLite" as DB
+
+User -> SPA : ••• menu -> Complete metadata
+SPA -> Tracks : POST /api/tracks/:id/enrich
+Tracks -> Lookup : lookupTrackMetadata(track)
+Lookup -> ITunes : GET /search?term=artist+title
+alt iTunes match
+  ITunes --> Lookup : title, album, genre, year, artworkUrl
+else no match / error
+  Lookup -> MB : GET /ws/2/recording?query=...
+  MB --> Lookup : recording + release (cover via CAA)
+end
+Lookup --> Tracks : best match or null
+Tracks -> Tracks : merge - only fill MISSING fields
+opt track has no cover yet
+  Tracks -> Art : downloadArtwork(url)
+  Art --> Tracks : covers/<sha1>.jpg
+end
+Tracks -> DB : UPDATE tracks
+Tracks --> SPA : updated track + source
+SPA -> User : "Metadata updated from ..."
+@enduml

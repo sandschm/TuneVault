@@ -1,0 +1,32 @@
+@startuml sequence-upload
+title Upload & Import of an Audio File
+
+actor User
+participant "React SPA" as SPA
+participant "uploads route" as Upload
+participant "importService" as Import
+participant "music-metadata" as MM
+participant "artworkService" as Art
+database "SQLite" as DB
+collections "File system\n/data" as FS
+
+User -> SPA : drop files on Add Music dialog
+SPA -> Upload : POST /api/uploads (multipart)
+Upload -> Upload : multer stores temp file
+loop per file
+  Upload -> Import : importAudioFile(tempPath, name)
+  Import -> MM : parseFile(tempPath)
+  MM --> Import : tags + embedded picture
+  Import -> FS : move to music/Artist/Album/NN Title.ext
+  alt embedded cover present
+    Import -> Art : storeArtwork(bytes)
+    Art -> FS : covers/<sha1>.jpg (deduplicated)
+  else no cover
+    Import -> DB : reuse artwork of same album
+  end
+  Import -> DB : INSERT INTO tracks
+  Import --> Upload : track row
+end
+Upload --> SPA : per-file result list
+SPA -> User : ✓ imported / ⚠ skipped / ✕ failed
+@enduml

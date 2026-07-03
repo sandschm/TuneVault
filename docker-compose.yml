@@ -1,0 +1,11 @@
+services:
+  tunevault:
+    build: .
+    image: tunevault:latest
+    container_name: tunevault
+    ports:
+      - "8080:8080"
+    volumes:
+      # Music files, cover art and the SQLite database live on the host.
+      - ./data:/data
+    restart: unless-stopped

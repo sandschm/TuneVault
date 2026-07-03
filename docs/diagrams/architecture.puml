@@ -1,0 +1,69 @@
+@startuml architecture
+title TuneVault - System Architecture
+
+skinparam componentStyle rectangle
+
+actor "User" as user
+
+node "Browser" {
+  [React SPA\n(Vite build)] as spa
+  [HTML5 <audio>] as audio
+}
+
+node "Docker Container" {
+  [Express HTTP Server] as express
+  package "Routes" {
+    [tracks] as rTracks
+    [library] as rLibrary
+    [playlists] as rPlaylists
+    [uploads] as rUploads
+    [artwork] as rArtwork
+  }
+  package "Services" {
+    [importService] as sImport
+    [archiveService] as sArchive
+    [metadataLookupService] as sLookup
+    [artworkService] as sArtwork
+  }
+  database "SQLite\nlibrary.db" as db
+}
+
+folder "/data (host volume)" {
+  folder "music/ (audio files)" as musicFs
+  folder "covers/ (album art)" as coversFs
+}
+
+cloud "Open APIs" {
+  [iTunes Search API] as itunes
+  [MusicBrainz +\nCover Art Archive] as mb
+}
+
+user --> spa
+spa --> express : REST /api/*
+audio --> rTracks : GET /stream (HTTP range)
+
+express --> rTracks
+express --> rLibrary
+express --> rPlaylists
+express --> rUploads
+express --> rArtwork
+
+rUploads --> sImport
+rTracks --> sArchive
+rTracks --> sLookup
+rLibrary --> sArchive
+rPlaylists --> sArchive
+sImport --> sArtwork
+sLookup --> itunes
+sLookup --> mb
+
+sImport --> musicFs : store files
+sArtwork --> coversFs : store covers
+rTracks --> musicFs : read files
+rArtwork --> coversFs : read covers
+
+rTracks --> db
+rLibrary --> db
+rPlaylists --> db
+sImport --> db
+@enduml

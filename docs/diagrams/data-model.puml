@@ -1,0 +1,51 @@
+@startuml data-model
+title TuneVault - Database Schema (SQLite)
+
+hide circle
+skinparam linetype ortho
+
+entity tracks {
+  * id : INTEGER <<PK>>
+  --
+  * title : TEXT
+  * artist : TEXT
+  * album_artist : TEXT
+  * album : TEXT
+  genre : TEXT
+  year : INTEGER
+  track_no : INTEGER
+  disc_no : INTEGER
+  duration : REAL
+  * rating : INTEGER (0..5)
+  * file_path : TEXT <<unique, relative to music/>>
+  file_size : INTEGER
+  mime_type : TEXT
+  bitrate : INTEGER
+  artwork_file : TEXT <<file in covers/>>
+  * created_at : TEXT
+  * play_count : INTEGER
+}
+
+entity playlists {
+  * id : INTEGER <<PK>>
+  --
+  * name : TEXT
+  * created_at : TEXT
+}
+
+entity playlist_tracks {
+  * playlist_id : INTEGER <<PK, FK>>
+  * track_id : INTEGER <<PK, FK>>
+  --
+  * position : INTEGER
+}
+
+playlists ||--o{ playlist_tracks : contains
+tracks ||--o{ playlist_tracks : appears in
+
+note bottom of tracks
+  Albums, artists and genres are derived
+  via GROUP BY - no separate tables that
+  could drift out of sync.
+end note
+@enduml

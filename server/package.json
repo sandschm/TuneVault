@@ -1,0 +1,21 @@
+{
+  "name": "tunevault-server",
+  "version": "1.0.0",
+  "description": "TuneVault backend - music library API",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "better-sqlite3": "^12.2.0",
+    "express": "^4.21.2",
+    "multer": "^2.0.1",
+    "music-metadata": "^11.2.1"
+  }
+}

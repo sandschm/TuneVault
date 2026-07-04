@@ -11,14 +11,20 @@ look and feel.
 
 - **Import via upload** — drag & drop or file picker; tags (ID3, Vorbis, MP4) and
   embedded cover art are read automatically
-- **Browse** the collection by songs, albums, artists and genres, with live search
+- **Browse** by songs, albums, song artists and genres
+- **Global search** across artists, albums and song titles with grouped results
 - **Play** single songs, whole albums or playlists (shuffle, repeat, seek, volume)
-- **Playlists** — create, rename, reorder, delete; stored in the database
+- **Playlists** — create (also on the fly while adding songs), rename, delete
+  one or many at once; a song can be in any number of playlists
+- **Multi-selection** — click / ⌘-click / shift-click songs, then bulk add to
+  playlists, remove from a playlist or delete from the library
 - **Favorites** — rate songs with 1–5 stars, dedicated Favorites view
 - **Download** single songs, or albums and playlists as ZIP archives
-- **Album covers** — extracted from the files or fetched from open APIs
-- **Metadata completion** — missing genre/year/album/cover looked up via the
-  iTunes Search API and MusicBrainz/Cover Art Archive (free, no API key)
+- **Metadata completion** — per song or per album; missing genre/year/album/cover
+  looked up via the iTunes Search API and MusicBrainz/Cover Art Archive (free,
+  no API key) and **persisted into the audio files**
+- **Cover download** — per song or per album, embedded into the files
+- **Light & dark theme** — toggle in the top-right corner
 
 ## Quick start (Docker / Podman)
 
@@ -63,6 +69,7 @@ server — it serves the built client automatically.
 
 - [User guide](docs/USER_GUIDE.md)
 - [Developer guide & architecture](docs/DEVELOPER_GUIDE.md)
+- [Handover — continue on another PC](docs/HANDOVER.md)
 - PlantUML diagrams: [docs/diagrams/](docs/diagrams)
 
 ## Supported audio formats

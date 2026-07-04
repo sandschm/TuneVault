@@ -10,6 +10,8 @@ import AlbumDetailView from './components/views/AlbumDetailView.jsx';
 import ArtistsView from './components/views/ArtistsView.jsx';
 import GenresView from './components/views/GenresView.jsx';
 import PlaylistView from './components/views/PlaylistView.jsx';
+import PlaylistsManageView from './components/views/PlaylistsManageView.jsx';
+import SearchView from './components/views/SearchView.jsx';
 
 export default function App() {
   const [view, setView] = useState({ name: 'songs' });
@@ -35,16 +37,23 @@ export default function App() {
     if (!name?.trim()) return;
     const playlist = await api.createPlaylist(name.trim());
     refreshPlaylists();
+    setSearch('');
     setView({ name: 'playlist', playlist });
   }, [refreshPlaylists]);
 
+  const navigate = useCallback((nextView) => {
+    setSearch('');
+    setView(nextView);
+  }, []);
+
   const viewProps = {
     key: `${view.name}-${JSON.stringify(view.params ?? '')}-${libraryVersion}`,
-    search,
     playlists,
-    onNavigate: setView,
+    onNavigate: navigate,
     onLibraryChanged: refreshLibrary,
   };
+
+  const searching = search.trim().length > 0;
 
   return (
     <div className="app">
@@ -59,17 +68,20 @@ export default function App() {
         <Sidebar
           view={view}
           playlists={playlists}
-          onNavigate={setView}
+          onNavigate={navigate}
           onCreatePlaylist={createPlaylist}
         />
         <main className="content">
-          {view.name === 'songs' && <SongsView {...viewProps} />}
-          {view.name === 'favorites' && <SongsView {...viewProps} favoritesOnly />}
-          {view.name === 'albums' && <AlbumsView {...viewProps} filter={view.params} />}
-          {view.name === 'album' && <AlbumDetailView {...viewProps} album={view.params} />}
-          {view.name === 'artists' && <ArtistsView {...viewProps} />}
-          {view.name === 'genres' && <GenresView {...viewProps} />}
-          {view.name === 'playlist' && <PlaylistView {...viewProps} playlist={view.playlist} />}
+          {searching && <SearchView {...viewProps} key={`search-${libraryVersion}`} search={search.trim()} />}
+          {!searching && view.name === 'songs' && <SongsView {...viewProps} />}
+          {!searching && view.name === 'favorites' && <SongsView {...viewProps} favoritesOnly />}
+          {!searching && view.name === 'artist' && <SongsView {...viewProps} artist={view.params.artist} />}
+          {!searching && view.name === 'albums' && <AlbumsView {...viewProps} filter={view.params} />}
+          {!searching && view.name === 'album' && <AlbumDetailView {...viewProps} album={view.params} />}
+          {!searching && view.name === 'artists' && <ArtistsView {...viewProps} />}
+          {!searching && view.name === 'genres' && <GenresView {...viewProps} />}
+          {!searching && view.name === 'playlists' && <PlaylistsManageView {...viewProps} />}
+          {!searching && view.name === 'playlist' && <PlaylistView {...viewProps} playlist={view.playlist} />}
         </main>
       </div>
       {uploadOpen && (

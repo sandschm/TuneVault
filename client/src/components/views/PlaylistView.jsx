@@ -28,8 +28,8 @@ export default function PlaylistView({ playlist, playlists, onNavigate, onLibrar
     onNavigate({ name: 'songs' });
   };
 
-  const removeTrack = async (track) => {
-    await api.removeFromPlaylist(playlist.id, track.id);
+  const removeTrack = async (trackId) => {
+    await api.removeFromPlaylist(playlist.id, trackId);
     load();
     onLibraryChanged();
   };

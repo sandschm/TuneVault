@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getDb } from '../db.js';
 import { streamTracksAsZip } from '../services/archiveService.js';
+import { enrichAlbum, downloadAlbumCover } from '../services/enrichmentService.js';
 
 export const libraryRouter = Router();
 
@@ -57,16 +58,70 @@ libraryRouter.get('/albums/download', (req, res) => {
 libraryRouter.get('/artists', (req, res) => {
   const artists = getDb()
     .prepare(
-      `SELECT album_artist AS name,
+      `SELECT artist AS name,
               COUNT(DISTINCT album) AS albumCount,
               COUNT(*) AS trackCount,
               MAX(artwork_file) AS artworkFile
        FROM tracks
-       GROUP BY album_artist
-       ORDER BY album_artist`,
+       GROUP BY artist
+       ORDER BY artist`,
     )
     .all();
   res.json(artists);
+});
+
+libraryRouter.get('/search', (req, res) => {
+  const query = (req.query.q ?? '').trim();
+  if (!query) {
+    return res.json({ artists: [], albums: [], tracks: [] });
+  }
+  const like = `%${query}%`;
+  const db = getDb();
+  res.json({
+    artists: db
+      .prepare(
+        `SELECT artist AS name, COUNT(*) AS trackCount, MAX(artwork_file) AS artworkFile
+         FROM tracks WHERE artist LIKE ? GROUP BY artist ORDER BY artist LIMIT 20`,
+      )
+      .all(like),
+    albums: db
+      .prepare(
+        `SELECT album, album_artist AS albumArtist, COUNT(*) AS trackCount,
+                MAX(year) AS year, MAX(artwork_file) AS artworkFile
+         FROM tracks WHERE album LIKE ? GROUP BY album_artist, album ORDER BY album LIMIT 20`,
+      )
+      .all(like),
+    tracks: db
+      .prepare(
+        `SELECT * FROM tracks WHERE title LIKE ? OR artist LIKE ? OR album LIKE ?
+         ORDER BY title LIMIT 100`,
+      )
+      .all(like, like, like),
+  });
+});
+
+libraryRouter.post('/albums/enrich', async (req, res, next) => {
+  try {
+    const result = await enrichAlbum(req.body.albumArtist ?? '', req.body.album ?? '');
+    if (!result) {
+      return res.status(404).json({ error: 'Album not found or no metadata match on iTunes/MusicBrainz' });
+    }
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+libraryRouter.post('/albums/cover', async (req, res, next) => {
+  try {
+    const result = await downloadAlbumCover(req.body.albumArtist ?? '', req.body.album ?? '');
+    if (!result) {
+      return res.status(404).json({ error: 'Album not found or no cover on iTunes/MusicBrainz' });
+    }
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
 });
 
 libraryRouter.get('/genres', (req, res) => {

@@ -15,7 +15,9 @@ export const api = {
   tracks: (params = {}) => request(`/api/tracks?${new URLSearchParams(params)}`),
   updateTrack: (id, fields) => request(`/api/tracks/${id}`, { method: 'PATCH', body: fields }),
   deleteTrack: (id) => request(`/api/tracks/${id}`, { method: 'DELETE' }),
+  deleteTracks: (trackIds) => request('/api/tracks/delete-batch', { method: 'POST', body: { trackIds } }),
   enrichTrack: (id) => request(`/api/tracks/${id}/enrich`, { method: 'POST' }),
+  downloadTrackCover: (id) => request(`/api/tracks/${id}/cover`, { method: 'POST' }),
 
   albums: (params = {}) => request(`/api/library/albums?${new URLSearchParams(params)}`),
   albumTracks: (albumArtist, album) =>
@@ -23,11 +25,17 @@ export const api = {
   artists: () => request('/api/library/artists'),
   genres: () => request('/api/library/genres'),
   stats: () => request('/api/library/stats'),
+  searchLibrary: (query) => request(`/api/library/search?${new URLSearchParams({ q: query })}`),
+  enrichAlbum: (albumArtist, album) =>
+    request('/api/library/albums/enrich', { method: 'POST', body: { albumArtist, album } }),
+  downloadAlbumCover: (albumArtist, album) =>
+    request('/api/library/albums/cover', { method: 'POST', body: { albumArtist, album } }),
 
   playlists: () => request('/api/playlists'),
   createPlaylist: (name) => request('/api/playlists', { method: 'POST', body: { name } }),
   renamePlaylist: (id, name) => request(`/api/playlists/${id}`, { method: 'PATCH', body: { name } }),
   deletePlaylist: (id) => request(`/api/playlists/${id}`, { method: 'DELETE' }),
+  deletePlaylists: (ids) => request('/api/playlists/delete-batch', { method: 'POST', body: { ids } }),
   playlistTracks: (id) => request(`/api/playlists/${id}/tracks`),
   addToPlaylist: (id, trackIds) => request(`/api/playlists/${id}/tracks`, { method: 'POST', body: { trackIds } }),
   removeFromPlaylist: (id, trackId) => request(`/api/playlists/${id}/tracks/${trackId}`, { method: 'DELETE' }),

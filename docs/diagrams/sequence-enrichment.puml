@@ -1,32 +1,42 @@
 @startuml sequence-enrichment
-title Completing Missing Metadata via Open APIs
+title Completing Missing Metadata / Covers via Open APIs (persisted to files)
 
 actor User
 participant "React SPA" as SPA
-participant "tracks route" as Tracks
+participant "tracks / library route" as Route
+participant "enrichmentService" as Enrich
 participant "metadataLookupService" as Lookup
 participant "iTunes Search API" as ITunes
 participant "MusicBrainz /\nCover Art Archive" as MB
 participant "artworkService" as Art
+participant "tagWriterService" as TagWriter
 database "SQLite" as DB
+collections "Audio files\n/data/music" as Files
 
-User -> SPA : ••• menu -> Complete metadata
-SPA -> Tracks : POST /api/tracks/:id/enrich
-Tracks -> Lookup : lookupTrackMetadata(track)
-Lookup -> ITunes : GET /search?term=artist+title
+User -> SPA : ••• -> Complete metadata / Download cover\n(or album buttons)
+SPA -> Route : POST /api/tracks/:id/enrich | /cover\nPOST /api/library/albums/enrich | /cover
+Route -> Enrich : enrichTrack / enrichAlbum /\ndownloadTrackCover / downloadAlbumCover
+Enrich -> Lookup : track or album lookup
+Lookup -> ITunes : GET /search
 alt iTunes match
-  ITunes --> Lookup : title, album, genre, year, artworkUrl
+  ITunes --> Lookup : metadata + artworkUrl
 else no match / error
-  Lookup -> MB : GET /ws/2/recording?query=...
-  MB --> Lookup : recording + release (cover via CAA)
+  Lookup -> MB : GET /ws/2/recording | /release
+  MB --> Lookup : metadata (cover via CAA)
 end
-Lookup --> Tracks : best match or null
-Tracks -> Tracks : merge - only fill MISSING fields
-opt track has no cover yet
-  Tracks -> Art : downloadArtwork(url)
-  Art --> Tracks : covers/<sha1>.jpg
+Lookup --> Enrich : best match or null
+Enrich -> DB : UPDATE tracks (fill MISSING fields only)
+Enrich -> TagWriter : writeTags(file, merged metadata)
+TagWriter -> Files : save ID3/Vorbis/MP4 tags
+opt cover needed (enrich: only if none, cover download: replace)
+  Enrich -> Art : fetchArtwork(url)
+  Art --> Enrich : image bytes
+  Enrich -> Art : storeArtwork -> covers/<sha1>
+  Enrich -> TagWriter : writeCover(file, image)
+  TagWriter -> Files : embed front cover
+  Enrich -> DB : UPDATE tracks.artwork_file
 end
-Tracks -> DB : UPDATE tracks
-Tracks --> SPA : updated track + source
-SPA -> User : "Metadata updated from ..."
+Enrich --> Route : result + source
+Route --> SPA : JSON
+SPA -> User : "... saved into the file(s)"
 @enduml

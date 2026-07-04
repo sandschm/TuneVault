@@ -22,6 +22,28 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
   const totalDuration = tracks.reduce((sum, track) => sum + (track.duration ?? 0), 0);
   const artworkFile = tracks.find((track) => track.artwork_file)?.artwork_file ?? album.artworkFile;
 
+  const enrichAlbum = async () => {
+    try {
+      const result = await api.enrichAlbum(album.albumArtist, album.album);
+      window.alert(`Metadata for ${result.updatedTracks} songs completed from ${result.source} and saved into the files.`);
+      load();
+      onLibraryChanged();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  };
+
+  const downloadCover = async () => {
+    try {
+      const result = await api.downloadAlbumCover(album.albumArtist, album.album);
+      window.alert(`Cover downloaded from ${result.source} and embedded into ${result.updatedTracks} files.`);
+      load();
+      onLibraryChanged();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  };
+
   return (
     <div className="view">
       <button className="back-link" onClick={() => onNavigate({ name: 'albums' })}>
@@ -44,6 +66,12 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
             <a className="secondary-button" href={urls.downloadAlbum(album.albumArtist, album.album)}>
               ⤓ Download
             </a>
+            <button className="secondary-button" onClick={enrichAlbum}>
+              Complete metadata
+            </button>
+            <button className="secondary-button" onClick={downloadCover}>
+              Download cover
+            </button>
           </div>
         </div>
       </div>

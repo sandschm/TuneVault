@@ -9,8 +9,8 @@ Navigate to the address where TuneVault is hosted (for example
 `http://localhost:8080`). The layout follows iTunes / Apple Music:
 
 - **Top bar** — playback controls (shuffle, previous, play/pause, next, repeat,
-  volume) on the left, the "now playing" display in the center, search and
-  **+ Add Music** on the right.
+  volume) on the left, the "now playing" display in the center, search,
+  **+ Add Music** and the theme toggle on the right.
 - **Sidebar** — your library sections (Songs, Albums, Artists, Genres,
   Favorites) and your playlists.
 - **Main area** — the content of the selected section.
@@ -39,19 +39,28 @@ an `Artist/Album/` folder structure.
 
 Use the sidebar:
 
-- **Songs** — every track in one list. Click a column-sorted list and use the
-  search field (top right) to filter by title, artist or album.
-- **Albums** — a grid of album covers. Click an album to open it, where you can
-  play or download the whole album.
-- **Artists** — all album artists with album/song counts. Clicking an artist
-  shows their albums.
-- **Genres** — same idea, grouped by genre.
+- **Songs** — every track in one list.
+- **Albums** — a grid of album covers. Click an album to open it.
+- **Artists** — all **song artists** (from the track metadata, not the album
+  artist) with song counts. Clicking an artist shows that artist's songs.
+- **Genres** — albums grouped by genre.
 - **Favorites** — every song you have rated with at least one star, best-rated
   first.
 
-The **search field** in the top bar filters whatever view you are in.
+## 4. Searching
 
-## 4. Playing music
+Type into the **search field** in the top bar. While you type, the main area
+shows grouped results for your whole library:
+
+- **Artists** whose name matches,
+- **Albums** whose title matches,
+- **Songs** whose title, artist or album matches.
+
+Click any result to jump to it, or work with the found songs directly (play,
+rate, select, add to playlists). Clearing the field or clicking any sidebar
+entry leaves the search.
+
+## 5. Playing music
 
 - **Double-click** any song row, or hover over the row number and click the
   **▶** button that appears.
@@ -60,49 +69,72 @@ The **search field** in the top bar filters whatever view you are in.
   and a draggable progress bar.
 - Use **⤨ shuffle** and **⟲ repeat** next to the transport buttons; the slider
   on the right of the controls adjusts the volume.
-- When a song ends, the next song of the current list plays automatically.
 
-## 5. Rating songs (favorites)
+## 6. Selecting multiple songs
+
+In every song list you can select several songs at once:
+
+- **Click** a row to select it.
+- **⌘/Ctrl + click** adds or removes single rows.
+- **Shift + click** selects a range.
+
+A selection bar appears above the list with bulk actions: **Add to playlist**
+(existing or new), **Remove from playlist** (when inside a playlist) and
+**Delete from library**. The **✕** on the right clears the selection.
+
+## 7. Rating songs (favorites)
 
 Every song row has five stars. Click a star to rate the song 1–5; click the
 same star again to remove the rating. Any song with at least one star appears
 in the **Favorites** view.
 
-## 6. Playlists
+## 8. Playlists
 
-- **Create** — click **+** next to the "Playlists" header in the sidebar and
-  enter a name.
-- **Add songs** — open the **•••** menu at the right end of any song row and
-  choose the playlist under *Add to playlist*.
-- **Manage** — open a playlist to play, download, **rename** or **delete** it
-  (deleting a playlist never deletes songs).
-- **Remove a song** from a playlist via the song's **•••** menu.
+- **Create** — click **+** next to "Playlists" in the sidebar, or choose
+  **＋ New playlist…** while adding songs: you are asked for the name first,
+  then the songs are added to it.
+- **Add songs** — open the **•••** menu of a song (or select several songs and
+  use the selection bar) and pick a playlist under *Add to playlist*, or
+  create a new one. A song can be in **any number of playlists**, but only
+  once per playlist.
+- **Remove songs** — via the song's **•••** menu or the selection bar
+  (*Remove from playlist*). The songs stay in your library.
+- **Manage** — click the **PLAYLISTS** heading in the sidebar to open the
+  playlist overview. There you can select one or many playlists with the
+  checkboxes and **delete them at once** (songs are never deleted).
+- **Rename / delete a single playlist** — open the playlist and use the
+  buttons in its header.
 
-## 7. Downloading music
+## 9. Downloading music
 
 - **Single song** — row menu **••• → Download**.
 - **Album** — open the album and click **⤓ Download** (ZIP archive).
 - **Playlist** — open the playlist and click **⤓ Download** (ZIP archive).
 
-## 8. Completing missing metadata
+## 10. Completing metadata and covers
 
-If a song is missing its genre, year, album name or cover art:
+TuneVault uses the free **iTunes Search API** and **MusicBrainz / Cover Art
+Archive** — no API key needed. Everything fetched is written **into the audio
+files themselves**, so the information survives exports and downloads.
 
-1. Open the song's **•••** menu.
-2. Click **Complete metadata**.
+- **Single song** — row menu **••• → Complete metadata** fills the *missing*
+  fields (genre, year, album, …) and fetches a cover if the song has none.
+  Existing tags are never overwritten.
+- **Whole album** — open the album and click **Complete metadata** to fill
+  missing genre/year for all songs of the album at once.
+- **Covers** — **••• → Download cover** (song) or the album's **Download
+  cover** button fetch the cover art and embed it into the file(s), replacing
+  an existing cover.
 
-TuneVault searches the **iTunes Search API** first and **MusicBrainz** as a
-fallback, fills in only the *missing* fields, and downloads a cover if the song
-has none. Existing tags are never overwritten.
+## 11. Deleting songs
 
-## 9. Deleting songs
-
-Row menu **••• → Delete from library**. This removes the database entry *and*
-the audio file on the server, so a confirmation is required.
+Row menu **••• → Delete from library**, or select several songs and use
+**Delete from library** in the selection bar. This removes the database entry
+*and* the audio files on the server, so a confirmation is required.
 
 ## Tips
 
-- Cover art is shared per album: if one file of an album has embedded art,
-  other files of the same album will use it too.
-- Ratings, playlists and play counts are stored in the server's database —
-  they survive restarts and are included in backups of the `data/` directory.
+- Ratings, playlists and play counts live in the server's database — they
+  survive restarts and are included in backups of the `data/` directory.
+- Since metadata and covers are persisted into the files, downloading an album
+  as ZIP gives you fully tagged files including artwork.

@@ -24,6 +24,8 @@ node "Docker Container" {
     [archiveService] as sArchive
     [metadataLookupService] as sLookup
     [artworkService] as sArtwork
+    [enrichmentService] as sEnrich
+    [tagWriterService] as sTagWriter
   }
   database "SQLite\nlibrary.db" as db
 }
@@ -50,15 +52,20 @@ express --> rArtwork
 
 rUploads --> sImport
 rTracks --> sArchive
-rTracks --> sLookup
+rTracks --> sEnrich
 rLibrary --> sArchive
+rLibrary --> sEnrich
 rPlaylists --> sArchive
 sImport --> sArtwork
+sEnrich --> sLookup
+sEnrich --> sArtwork
+sEnrich --> sTagWriter
 sLookup --> itunes
 sLookup --> mb
 
 sImport --> musicFs : store files
 sArtwork --> coversFs : store covers
+sTagWriter --> musicFs : write tags + covers\ninto audio files
 rTracks --> musicFs : read files
 rArtwork --> coversFs : read covers
 
@@ -66,4 +73,5 @@ rTracks --> db
 rLibrary --> db
 rPlaylists --> db
 sImport --> db
+sEnrich --> db
 @enduml

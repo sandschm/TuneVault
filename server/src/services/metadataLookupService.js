@@ -23,6 +23,75 @@ function searchTerm(track) {
   return `${artist} ${track.title}`.trim();
 }
 
+/**
+ * Looks up album metadata (genre, year, cover) on open APIs.
+ * Tries the iTunes Search API first, MusicBrainz second.
+ */
+export async function lookupAlbumMetadata(albumArtist, album) {
+  for (const provider of [lookupAlbumOnItunes, lookupAlbumOnMusicBrainz]) {
+    try {
+      const match = await provider(albumArtist, album);
+      if (match) {
+        return match;
+      }
+    } catch {
+      // Provider unreachable or malformed response - fall through to the next one.
+    }
+  }
+  return null;
+}
+
+async function lookupAlbumOnItunes(albumArtist, album) {
+  const url = new URL('https://itunes.apple.com/search');
+  const artist = albumArtist !== 'Unknown Artist' ? albumArtist : '';
+  url.searchParams.set('term', `${artist} ${album}`.trim());
+  url.searchParams.set('media', 'music');
+  url.searchParams.set('entity', 'album');
+  url.searchParams.set('limit', '1');
+
+  const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+  if (!response.ok) {
+    return null;
+  }
+  const result = (await response.json()).results?.[0];
+  if (!result) {
+    return null;
+  }
+  return {
+    source: 'iTunes Search API',
+    album: result.collectionName ?? null,
+    albumArtist: result.artistName ?? null,
+    genre: result.primaryGenreName ?? null,
+    year: result.releaseDate ? new Date(result.releaseDate).getFullYear() : null,
+    artworkUrl: result.artworkUrl100?.replace('100x100', '600x600') ?? null,
+  };
+}
+
+async function lookupAlbumOnMusicBrainz(albumArtist, album) {
+  const url = new URL('https://musicbrainz.org/ws/2/release');
+  const artistClause = albumArtist !== 'Unknown Artist' ? ` AND artist:"${albumArtist}"` : '';
+  url.searchParams.set('query', `release:"${album}"${artistClause}`);
+  url.searchParams.set('fmt', 'json');
+  url.searchParams.set('limit', '1');
+
+  const response = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+  if (!response.ok) {
+    return null;
+  }
+  const release = (await response.json()).releases?.[0];
+  if (!release) {
+    return null;
+  }
+  return {
+    source: 'MusicBrainz',
+    album: release.title ?? null,
+    albumArtist: release['artist-credit']?.[0]?.name ?? null,
+    genre: null,
+    year: release.date ? Number(release.date.slice(0, 4)) : null,
+    artworkUrl: `https://coverartarchive.org/release/${release.id}/front-500`,
+  };
+}
+
 async function lookupOnItunes(track) {
   const url = new URL('https://itunes.apple.com/search');
   url.searchParams.set('term', searchTerm(track));

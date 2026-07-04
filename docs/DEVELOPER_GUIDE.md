@@ -9,7 +9,8 @@ TuneVault is a self-hosted music library consisting of:
 | Frontend  | React 18 + Vite (single-page app, plain CSS)          |
 | Backend   | Node.js 22, Express 4 (ES modules)                    |
 | Database  | SQLite via `better-sqlite3` (synchronous, WAL mode)   |
-| Tag/audio | `music-metadata` (ID3, Vorbis, MP4 tag parsing)       |
+| Tag read  | `music-metadata` (ID3, Vorbis, MP4 tag parsing)       |
+| Tag write | `node-taglib-sharp` (persists tags + covers to files) |
 | Packaging | Multi-stage Dockerfile, single runtime container      |
 
 All persistent state lives under one data directory (`DATA_DIR`, `/data` in
@@ -52,9 +53,12 @@ routes/
   artwork.js             # serves cover images with immutable caching
 services/
   importService.js       # tag parsing, file placement, track insertion
-  artworkService.js      # store/dedupe/download cover images
+  artworkService.js      # store/dedupe/fetch cover images
   archiveService.js      # streams ZIP archives (albums, playlists, selections)
   metadataLookupService.js  # provider chain: iTunes Search API -> MusicBrainz
+                            # (track-level and album-level lookups)
+  tagWriterService.js    # writes tags + covers INTO the audio files (taglib)
+  enrichmentService.js   # orchestrates lookup -> DB update -> file persistence
 ```
 
 Design notes (SOLID/GRASP):
@@ -81,14 +85,30 @@ api.js                   # thin typed-ish wrapper around the REST API + URLs
 styles.css               # Apple-Music-inspired theme (accent #fa2d48)
 player/PlayerContext.jsx # queue, shuffle/repeat, HTML5 Audio lifecycle
 components/
-  PlayerBar.jsx          # transport controls, LCD display, search, upload
-  Sidebar.jsx            # library sections + playlists
-  TrackTable.jsx         # song rows: play, stars, ••• menu (download/enrich/...)
+  PlayerBar.jsx          # transport controls, LCD display, search, upload, theme
+  Sidebar.jsx            # library sections + playlists (heading opens manage view)
+  TrackTable.jsx         # song rows: play, stars, ••• menu, multi-selection
+                         # (click / cmd+click / shift+click) + bulk action bar
   StarRating.jsx         # 1-5 star widget (click same star to clear)
   Artwork.jsx            # cover image with placeholder fallback
   UploadDialog.jsx       # drag & drop upload with progress + results
-  views/                 # Songs, Albums, AlbumDetail, Artists, Genres, Playlist
+  views/                 # Songs (also artist filter), Albums, AlbumDetail,
+                         # Artists, Genres, Playlist, PlaylistsManage, Search
 ```
+
+Behavioral notes:
+
+- The **Artists** view groups by the track's `artist` tag (song artist), not
+  `album_artist`; clicking an artist shows their songs.
+- A non-empty **search field** overrides the current view and renders
+  `SearchView` (grouped artists/albums/songs via `/api/library/search`);
+  navigation clears the search (`navigate()` in `App.jsx` — always use it
+  instead of raw `setView`).
+- **Multi-selection** lives entirely in `TrackTable`; bulk actions call the
+  batch endpoints below.
+- Metadata enrichment and cover downloads **persist into the audio files**
+  through `tagWriterService` — the SQLite row and the file tags are kept in
+  sync by `enrichmentService`.
 
 Navigation is a simple `view` state object in `App.jsx` (`{name, params}`) —
 no router dependency. Playback state is a React context so the player keeps
@@ -104,12 +124,19 @@ playing while the user navigates.
 | POST   | `/api/tracks/download` `{trackIds, name}` | ZIP of arbitrary tracks |
 | PATCH  | `/api/tracks/:id` | edit tags / set `rating` (0–5) |
 | DELETE | `/api/tracks/:id` | remove track + file |
-| POST   | `/api/tracks/:id/enrich` | fill missing metadata via open APIs |
+| POST   | `/api/tracks/delete-batch` `{trackIds}` | remove several tracks + files |
+| POST   | `/api/tracks/:id/enrich` | fill missing metadata (persists into file) |
+| POST   | `/api/tracks/:id/cover` | fetch cover, embed into file |
 | GET    | `/api/library/albums[?albumArtist=&genre=]` | album aggregates |
 | GET    | `/api/library/albums/tracks?albumArtist=&album=` | songs of an album |
 | GET    | `/api/library/albums/download?albumArtist=&album=` | album as ZIP |
-| GET    | `/api/library/artists` / `/genres` / `/stats` | aggregates |
+| POST   | `/api/library/albums/enrich` `{albumArtist, album}` | fill missing metadata for all album tracks (persists into files) |
+| POST   | `/api/library/albums/cover` `{albumArtist, album}` | fetch album cover, embed into all files |
+| GET    | `/api/library/artists` | song-artist aggregates (groups by `artist`) |
+| GET    | `/api/library/genres` / `/stats` | aggregates |
+| GET    | `/api/library/search?q=` | grouped search: artists, albums, tracks |
 | GET/POST | `/api/playlists` | list / create |
+| POST   | `/api/playlists/delete-batch` `{ids}` | delete several playlists |
 | PATCH/DELETE | `/api/playlists/:id` | rename / delete |
 | GET/POST | `/api/playlists/:id/tracks` | list / add tracks |
 | DELETE | `/api/playlists/:id/tracks/:trackId` | remove track |
@@ -174,7 +201,12 @@ Notes:
    release id.
 
 Enrichment is **non-destructive**: only `NULL`/"Unknown" fields are filled and
-covers are only added when the track has none.
+covers are only added when the track has none. The explicit *Download cover*
+actions are the exception — they intentionally **replace** existing covers.
+
+All enrichment results are persisted twice by `enrichmentService`: into the
+SQLite row **and** into the audio file's tags via `tagWriterService`
+(`node-taglib-sharp`), so files and library never drift apart.
 
 ## 7. Conventions
 

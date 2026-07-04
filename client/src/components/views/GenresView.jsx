@@ -2,23 +2,19 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api.js';
 import Artwork from '../Artwork.jsx';
 
-export default function GenresView({ search, onNavigate }) {
+export default function GenresView({ onNavigate }) {
   const [genres, setGenres] = useState([]);
 
   useEffect(() => {
     api.genres().then(setGenres).catch(console.error);
   }, []);
 
-  const visible = search
-    ? genres.filter((genre) => genre.name.toLowerCase().includes(search.toLowerCase()))
-    : genres;
-
   return (
     <div className="view">
       <h1>Genres</h1>
-      {!visible.length && <div className="empty-state">No genres yet.</div>}
+      {!genres.length && <div className="empty-state">No genres yet.</div>}
       <div className="list-cards">
-        {visible.map((genre) => (
+        {genres.map((genre) => (
           <button
             key={genre.name}
             className="list-card"

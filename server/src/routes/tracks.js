@@ -4,8 +4,7 @@ import { Router } from 'express';
 import { config } from '../config.js';
 import { getDb } from '../db.js';
 import { streamTracksAsZip } from '../services/archiveService.js';
-import { lookupTrackMetadata } from '../services/metadataLookupService.js';
-import { downloadArtwork } from '../services/artworkService.js';
+import { enrichTrack, downloadTrackCover } from '../services/enrichmentService.js';
 
 export const tracksRouter = Router();
 
@@ -109,41 +108,46 @@ tracksRouter.delete('/:id', (req, res) => {
   res.status(204).end();
 });
 
-tracksRouter.post('/:id/enrich', async (req, res) => {
+tracksRouter.post('/:id/enrich', async (req, res, next) => {
   const track = requireTrack(req, res);
   if (!track) return;
-
-  const match = await lookupTrackMetadata(track);
-  if (!match) {
-    return res.status(404).json({ error: 'No metadata match found on iTunes or MusicBrainz' });
-  }
-
-  const updated = {
-    genre: track.genre ?? match.genre,
-    year: track.year ?? match.year,
-    track_no: track.track_no ?? match.trackNo,
-    album: track.album === 'Unknown Album' && match.album ? match.album : track.album,
-    artist: track.artist === 'Unknown Artist' && match.artist ? match.artist : track.artist,
-    album_artist:
-      track.album_artist === 'Unknown Artist' && match.albumArtist ? match.albumArtist : track.album_artist,
-  };
-
-  let artworkFile = track.artwork_file;
-  if (!artworkFile && match.artworkUrl) {
-    try {
-      artworkFile = await downloadArtwork(match.artworkUrl);
-    } catch {
-      artworkFile = null;
+  try {
+    const result = await enrichTrack(track.id);
+    if (!result) {
+      return res.status(404).json({ error: 'No metadata match found on iTunes or MusicBrainz' });
     }
+    res.json(result);
+  } catch (error) {
+    next(error);
   }
+});
 
-  getDb()
-    .prepare(
-      `UPDATE tracks SET genre = @genre, year = @year, track_no = @track_no, album = @album,
-         artist = @artist, album_artist = @album_artist, artwork_file = @artwork_file
-       WHERE id = @id`,
-    )
-    .run({ ...updated, artwork_file: artworkFile, id: track.id });
+tracksRouter.post('/:id/cover', async (req, res, next) => {
+  const track = requireTrack(req, res);
+  if (!track) return;
+  try {
+    const result = await downloadTrackCover(track.id);
+    if (!result) {
+      return res.status(404).json({ error: 'No cover found on iTunes or MusicBrainz' });
+    }
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
 
-  res.json({ track: findTrack(track.id), source: match.source });
+tracksRouter.post('/delete-batch', (req, res) => {
+  const ids = (Array.isArray(req.body.trackIds) ? req.body.trackIds : []).filter(Number.isInteger);
+  if (!ids.length) {
+    return res.status(400).json({ error: 'No valid track ids given' });
+  }
+  const db = getDb();
+  const tracks = db
+    .prepare(`SELECT * FROM tracks WHERE id IN (${ids.map(() => '?').join(',')})`)
+    .all(...ids);
+  for (const track of tracks) {
+    fs.rmSync(path.join(config.musicDir, track.file_path), { force: true });
+  }
+  db.prepare(`DELETE FROM tracks WHERE id IN (${ids.map(() => '?').join(',')})`).run(...ids);
+  res.json({ deleted: tracks.length });
 });

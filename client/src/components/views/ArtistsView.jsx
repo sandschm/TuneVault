@@ -2,27 +2,23 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api.js';
 import Artwork from '../Artwork.jsx';
 
-export default function ArtistsView({ search, onNavigate }) {
+export default function ArtistsView({ onNavigate }) {
   const [artists, setArtists] = useState([]);
 
   useEffect(() => {
     api.artists().then(setArtists).catch(console.error);
   }, []);
 
-  const visible = search
-    ? artists.filter((artist) => artist.name.toLowerCase().includes(search.toLowerCase()))
-    : artists;
-
   return (
     <div className="view">
       <h1>Artists</h1>
-      {!visible.length && <div className="empty-state">No artists yet.</div>}
+      {!artists.length && <div className="empty-state">No artists yet.</div>}
       <div className="list-cards">
-        {visible.map((artist) => (
+        {artists.map((artist) => (
           <button
             key={artist.name}
             className="list-card"
-            onClick={() => onNavigate({ name: 'albums', params: { albumArtist: artist.name } })}
+            onClick={() => onNavigate({ name: 'artist', params: { artist: artist.name } })}
           >
             <Artwork artworkFile={artist.artworkFile} size="round" title={artist.name} />
             <div className="list-card-body">

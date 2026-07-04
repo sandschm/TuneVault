@@ -30,12 +30,17 @@ export function artworkPath(fileName) {
   return path.join(config.coversDir, fileName);
 }
 
-export async function downloadArtwork(url) {
+export async function fetchArtwork(url) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Artwork download failed with status ${response.status}`);
   }
   const contentType = response.headers.get('content-type') ?? 'image/jpeg';
   const buffer = Buffer.from(await response.arrayBuffer());
+  return { buffer, contentType };
+}
+
+export async function downloadArtwork(url) {
+  const { buffer, contentType } = await fetchArtwork(url);
   return storeArtwork(buffer, contentType);
 }

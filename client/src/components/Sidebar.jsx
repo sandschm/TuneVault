@@ -21,7 +21,13 @@ export default function Sidebar({ view, playlists, onNavigate, onCreatePlaylist 
         </button>
       ))}
       <div className="sidebar-section">
-        Playlists
+        <button
+          className={`sidebar-section-link ${view.name === 'playlists' ? 'active' : ''}`}
+          title="Manage playlists"
+          onClick={() => onNavigate({ name: 'playlists' })}
+        >
+          Playlists
+        </button>
         <button className="sidebar-add" title="New playlist" onClick={onCreatePlaylist}>
           +
         </button>

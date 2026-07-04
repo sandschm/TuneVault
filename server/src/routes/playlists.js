@@ -44,6 +44,17 @@ function playlistTracks(playlistId) {
     .all(playlistId);
 }
 
+playlistsRouter.post('/delete-batch', (req, res) => {
+  const ids = (Array.isArray(req.body.ids) ? req.body.ids : []).filter(Number.isInteger);
+  if (!ids.length) {
+    return res.status(400).json({ error: 'No valid playlist ids given' });
+  }
+  const result = getDb()
+    .prepare(`DELETE FROM playlists WHERE id IN (${ids.map(() => '?').join(',')})`)
+    .run(...ids);
+  res.json({ deleted: result.changes });
+});
+
 playlistsRouter.post('/', (req, res) => {
   const name = (req.body.name ?? '').trim();
   if (!name) {

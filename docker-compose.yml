@@ -4,7 +4,7 @@ services:
     image: tunevault:latest
     container_name: tunevault
     ports:
-      - "8080:8080"
+      - "8961:8080"
     volumes:
       # Music files, cover art and the SQLite database live on the host.
       - ./data:/data

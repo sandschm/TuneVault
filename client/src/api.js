@@ -30,6 +30,8 @@ export const api = {
   genres: () => request('/api/library/genres'),
   stats: () => request('/api/library/stats'),
   searchLibrary: (query) => request(`/api/library/search?${new URLSearchParams({ q: query })}`),
+  updateAlbum: (albumArtist, album, fields) =>
+    request('/api/library/albums', { method: 'PATCH', body: { albumArtist, album, fields } }),
   enrichAlbum: (albumArtist, album, provider = 'auto') =>
     request('/api/library/albums/enrich', { method: 'POST', body: { albumArtist, album, provider } }),
   overwriteAlbum: (albumArtist, album, provider = 'auto') =>

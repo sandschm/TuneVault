@@ -124,7 +124,7 @@ playing while the user navigates.
 | GET    | `/api/tracks/:id/stream` | audio stream (HTTP range supported) |
 | GET    | `/api/tracks/:id/download` | download original file |
 | POST   | `/api/tracks/download` `{trackIds, name}` | ZIP of arbitrary tracks |
-| PATCH  | `/api/tracks/:id` | edit tags / set `rating` (0–5) |
+| PATCH  | `/api/tracks/:id` | edit tags / set `rating` (0–5); tag changes are written into the file |
 | DELETE | `/api/tracks/:id` | remove track + file |
 | POST   | `/api/tracks/delete-batch` `{trackIds}` | remove several tracks + files |
 | POST   | `/api/tracks/:id/enrich` `{provider?}` | fill missing metadata (persists into file) |
@@ -133,6 +133,7 @@ playing while the user navigates.
 | GET    | `/api/library/albums[?albumArtist=&genre=]` | album aggregates |
 | GET    | `/api/library/albums/tracks?albumArtist=&album=` | songs of an album |
 | GET    | `/api/library/albums/download?albumArtist=&album=` | album as ZIP |
+| PATCH  | `/api/library/albums` `{albumArtist, album, fields}` | edit album/albumArtist/genre/year of all album tracks (persists into files) |
 | POST   | `/api/library/albums/enrich` `{albumArtist, album, provider?}` | fill missing metadata for all album tracks (persists into files) |
 | POST   | `/api/library/albums/overwrite` `{albumArtist, album, provider?}` | overwrite album/albumArtist/genre/year of all album tracks with looked-up values (persists into files) |
 | POST   | `/api/library/albums/cover` `{albumArtist, album, provider?}` | fetch album cover, embed into all files |

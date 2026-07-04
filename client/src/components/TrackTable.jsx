@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api, urls } from '../api.js';
 import { usePlayer } from '../player/PlayerContext.jsx';
 import Artwork from './Artwork.jsx';
+import MetadataDialog from './MetadataDialog.jsx';
 import ProviderSelect from './ProviderSelect.jsx';
 import StarRating from './StarRating.jsx';
 
@@ -11,6 +12,19 @@ function formatDuration(seconds) {
   const rest = Math.round(seconds % 60);
   return `${minutes}:${String(rest).padStart(2, '0')}`;
 }
+
+const TRACK_EDIT_FIELDS = [
+  { key: 'title', label: 'Title' },
+  { key: 'artist', label: 'Artist' },
+  { key: 'album_artist', label: 'Album artist' },
+  { key: 'album', label: 'Album' },
+  { key: 'genre', label: 'Genre' },
+  { key: 'year', label: 'Year', type: 'number' },
+  { key: 'track_no', label: 'Track no.', type: 'number' },
+  { key: 'disc_no', label: 'Disc no.', type: 'number' },
+];
+
+const NUMERIC_TRACK_FIELDS = new Set(['year', 'track_no', 'disc_no']);
 
 /** Menu section listing existing playlists plus a "New playlist" entry. */
 function AddToPlaylistOptions({ playlists, onAdd, onAddToNew }) {
@@ -37,6 +51,7 @@ export default function TrackTable({
   const player = usePlayer();
   const [menuTrackId, setMenuTrackId] = useState(null);
   const [provider, setProvider] = useState('auto');
+  const [editTrack, setEditTrack] = useState(null);
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [anchorIndex, setAnchorIndex] = useState(null);
@@ -105,6 +120,26 @@ export default function TrackTable({
       finishAction();
     } catch (error) {
       window.alert(error.message);
+    }
+  };
+
+  const saveTrackEdits = async (values) => {
+    const body = {};
+    for (const [key, raw] of Object.entries(values)) {
+      if (NUMERIC_TRACK_FIELDS.has(key)) {
+        const value = String(raw).trim() === '' ? null : Number(raw);
+        if (value !== null && !Number.isInteger(value)) continue;
+        if (value !== (editTrack[key] ?? null)) body[key] = value;
+      } else {
+        const value = String(raw).trim();
+        if (!value && key !== 'genre') continue; // never blank out title/artist/album
+        const normalized = value || null;
+        if (normalized !== (editTrack[key] ?? null)) body[key] = normalized;
+      }
+    }
+    if (Object.keys(body).length) {
+      await api.updateTrack(editTrack.id, body);
+      onChanged();
     }
   };
 
@@ -242,6 +277,14 @@ export default function TrackTable({
                         <a href={urls.downloadTrack(track.id)} download>
                           Download
                         </a>
+                        <button
+                          onClick={() => {
+                            setEditTrack(track);
+                            setMenuTrackId(null);
+                          }}
+                        >
+                          Edit metadata…
+                        </button>
                         <div className="row-menu-label">Metadata source</div>
                         <ProviderSelect value={provider} onChange={setProvider} />
                         <button onClick={() => enrich(track)}>Complete metadata</button>
@@ -267,6 +310,16 @@ export default function TrackTable({
           })}
         </tbody>
       </table>
+
+      {editTrack && (
+        <MetadataDialog
+          title="Edit metadata"
+          fields={TRACK_EDIT_FIELDS}
+          initialValues={editTrack}
+          onSave={saveTrackEdits}
+          onClose={() => setEditTrack(null)}
+        />
+      )}
     </div>
   );
 }

@@ -19,6 +19,9 @@ look and feel.
   one or many at once; a song can be in any number of playlists
 - **Multi-selection** — click / ⌘-click / shift-click songs, then bulk add to
   playlists, remove from a playlist or delete from the library
+- **Edit metadata manually** — dialog for single songs (title, artist, album,
+  genre, year, track/disc no.) and whole albums (album, album artist, genre,
+  year); changes are written into the audio files
 - **Favorites** — rate songs with 1–5 stars, dedicated Favorites view
 - **Download** single songs, or albums and playlists as ZIP archives
 - **Metadata completion** — per song or per album; missing genre/year/album/cover

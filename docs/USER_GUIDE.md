@@ -113,6 +113,19 @@ in the **Favorites** view.
 - **Album** — open the album and click **⤓ Download** (ZIP archive).
 - **Playlist** — open the playlist and click **⤓ Download** (ZIP archive).
 
+## 9a. Editing metadata manually
+
+- **Single song** — row menu **••• → Edit metadata…** opens a dialog with
+  title, artist, album artist, album, genre, year and track/disc number.
+- **Whole album** — the album header's **Edit metadata** button edits album
+  name, album artist, genre and year for all songs of the album at once.
+  Renaming the album or album artist regroups it; the view follows the new
+  name automatically.
+- Changes are saved to the database **and** written into the audio files
+  (except rating and disc number, which live only in the database).
+- Empty title/artist/album fields are ignored, so you can't accidentally
+  blank them out; clearing genre removes it.
+
 ## 10. Completing metadata and covers
 
 TuneVault uses the free **iTunes Search API**, **Deezer** and **MusicBrainz /

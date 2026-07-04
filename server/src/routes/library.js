@@ -3,6 +3,7 @@ import { getDb } from '../db.js';
 import { streamTracksAsZip } from '../services/archiveService.js';
 import { enrichAlbum, overwriteAlbum, downloadAlbumCover } from '../services/enrichmentService.js';
 import { METADATA_PROVIDERS } from '../services/metadataLookupService.js';
+import { writeTags } from '../services/tagWriterService.js';
 
 function requestedProvider(req) {
   const provider = req.body?.provider;
@@ -103,6 +104,57 @@ libraryRouter.get('/search', (req, res) => {
          ORDER BY title LIMIT 100`,
       )
       .all(like, like, like),
+  });
+});
+
+libraryRouter.patch('/albums', (req, res) => {
+  const tracks = albumTracks(req.body.albumArtist ?? '', req.body.album ?? '');
+  if (!tracks.length) {
+    return res.status(404).json({ error: 'Album not found' });
+  }
+
+  const fields = req.body.fields ?? {};
+  const updates = {};
+  if (typeof fields.album === 'string' && fields.album.trim()) {
+    updates.album = fields.album.trim();
+  }
+  if (typeof fields.albumArtist === 'string' && fields.albumArtist.trim()) {
+    updates.album_artist = fields.albumArtist.trim();
+  }
+  if ('genre' in fields) {
+    updates.genre = typeof fields.genre === 'string' && fields.genre.trim() ? fields.genre.trim() : null;
+  }
+  if ('year' in fields) {
+    const year = Number(fields.year);
+    if (fields.year != null && fields.year !== '' && !Number.isInteger(year)) {
+      return res.status(400).json({ error: 'Year must be an integer' });
+    }
+    updates.year = Number.isInteger(year) && fields.year !== '' && fields.year != null ? year : null;
+  }
+  if (!Object.keys(updates).length) {
+    return res.status(400).json({ error: 'No editable fields in request body' });
+  }
+
+  const db = getDb();
+  const assignments = Object.keys(updates).map((field) => `${field} = @${field}`).join(', ');
+  const updateStatement = db.prepare(`UPDATE tracks SET ${assignments} WHERE id = @id`);
+  for (const track of tracks) {
+    updateStatement.run({ ...updates, id: track.id });
+    const updated = db.prepare('SELECT * FROM tracks WHERE id = ?').get(track.id);
+    writeTags(updated.file_path, {
+      title: updated.title,
+      artist: updated.artist,
+      albumArtist: updated.album_artist,
+      album: updated.album,
+      genre: updated.genre,
+      year: updated.year,
+      trackNo: updated.track_no,
+    });
+  }
+  res.json({
+    updatedTracks: tracks.length,
+    album: updates.album ?? req.body.album,
+    albumArtist: updates.album_artist ?? req.body.albumArtist,
   });
 });
 

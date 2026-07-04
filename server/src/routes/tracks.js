@@ -6,6 +6,7 @@ import { getDb } from '../db.js';
 import { streamTracksAsZip } from '../services/archiveService.js';
 import { enrichTrack, overwriteTrack, downloadTrackCover } from '../services/enrichmentService.js';
 import { METADATA_PROVIDERS } from '../services/metadataLookupService.js';
+import { writeTags } from '../services/tagWriterService.js';
 
 function requestedProvider(req) {
   const provider = req.body?.provider;
@@ -103,7 +104,22 @@ tracksRouter.patch('/:id', (req, res) => {
   const assignments = updates.map((field) => `${field} = @${field}`).join(', ');
   const values = Object.fromEntries(updates.map((field) => [field, req.body[field]]));
   getDb().prepare(`UPDATE tracks SET ${assignments} WHERE id = @id`).run({ ...values, id: track.id });
-  res.json(findTrack(track.id));
+
+  const updated = findTrack(track.id);
+  // Persist tag edits into the audio file so file and library never drift
+  // apart. Rating and disc_no live only in the database.
+  if (updates.some((field) => field !== 'rating')) {
+    writeTags(updated.file_path, {
+      title: updated.title,
+      artist: updated.artist,
+      albumArtist: updated.album_artist,
+      album: updated.album,
+      genre: updated.genre,
+      year: updated.year,
+      trackNo: updated.track_no,
+    });
+  }
+  res.json(updated);
 });
 
 tracksRouter.delete('/:id', (req, res) => {

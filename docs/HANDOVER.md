@@ -102,7 +102,9 @@ Details per file: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) section 2.
   cover* replaces covers; explicit *Overwrite metadata* replaces
   album/albumArtist/genre/year(/trackNo) but never title, artist or cover.
   All persist into DB **and** file tags via `enrichmentService` →
-  `tagWriterService`.
+  `tagWriterService`. Manual edits (`PATCH /api/tracks/:id`,
+  `PATCH /api/library/albums`) also write file tags — rating and disc_no
+  stay DB-only.
 - **Navigation**: in `App.jsx` always navigate through `navigate()` (clears
   the search), never raw `setView`.
 - **Albums/artists/genres** are derived from `tracks` via `GROUP BY` —
@@ -137,7 +139,8 @@ Open ideas / not yet implemented:
 
 - Automated tests (API integration tests would fit well)
 - Playlist reordering UI (the API `PUT /api/playlists/:id/order` exists)
-- Editing tags manually in the UI (the API `PATCH /api/tracks/:id` exists)
 - Multi-user support / authentication (currently none — do not expose the
   app unauthenticated to the internet)
 - Rate limiting for MusicBrainz when enriching many albums in a row
+- Moving/renaming audio files when artist/album tags change (files keep
+  their original `Artist/Album/` path; only the tags are rewritten)

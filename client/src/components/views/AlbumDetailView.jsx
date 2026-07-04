@@ -2,8 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, urls } from '../../api.js';
 import { usePlayer } from '../../player/PlayerContext.jsx';
 import Artwork from '../Artwork.jsx';
+import MetadataDialog from '../MetadataDialog.jsx';
 import ProviderSelect from '../ProviderSelect.jsx';
 import TrackTable from '../TrackTable.jsx';
+
+const ALBUM_EDIT_FIELDS = [
+  { key: 'album', label: 'Album' },
+  { key: 'albumArtist', label: 'Album artist' },
+  { key: 'genre', label: 'Genre' },
+  { key: 'year', label: 'Year', type: 'number' },
+];
 
 function formatTotal(seconds) {
   const minutes = Math.round((seconds ?? 0) / 60);
@@ -14,6 +22,7 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
   const player = usePlayer();
   const [tracks, setTracks] = useState([]);
   const [provider, setProvider] = useState('auto');
+  const [editOpen, setEditOpen] = useState(false);
 
   const load = useCallback(() => {
     api.albumTracks(album.albumArtist, album.album).then(setTracks).catch(console.error);
@@ -32,6 +41,31 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
       onLibraryChanged();
     } catch (error) {
       window.alert(error.message);
+    }
+  };
+
+  const saveAlbumEdits = async (values) => {
+    const fields = {};
+    const albumName = String(values.album).trim();
+    const albumArtist = String(values.albumArtist).trim();
+    if (albumName && albumName !== album.album) fields.album = albumName;
+    if (albumArtist && albumArtist !== album.albumArtist) fields.albumArtist = albumArtist;
+    if (String(values.genre).trim() !== (album.genre ?? '')) fields.genre = String(values.genre).trim();
+    if (String(values.year).trim() !== String(album.year ?? '')) {
+      fields.year = String(values.year).trim() === '' ? null : Number(values.year);
+    }
+    if (!Object.keys(fields).length) return;
+
+    const result = await api.updateAlbum(album.albumArtist, album.album, fields);
+    onLibraryChanged();
+    if (result.album !== album.album || result.albumArtist !== album.albumArtist) {
+      // The album's identity (grouping key) changed — reopen it under its new name.
+      onNavigate({
+        name: 'album',
+        params: { ...album, album: result.album, albumArtist: result.albumArtist },
+      });
+    } else {
+      load();
     }
   };
 
@@ -86,6 +120,9 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
             <a className="secondary-button" href={urls.downloadAlbum(album.albumArtist, album.album)}>
               ⤓ Download
             </a>
+            <button className="secondary-button" onClick={() => setEditOpen(true)}>
+              Edit metadata
+            </button>
             <ProviderSelect value={provider} onChange={setProvider} />
             <button className="secondary-button" onClick={enrichAlbum}>
               Complete metadata
@@ -108,6 +145,21 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
           onLibraryChanged();
         }}
       />
+
+      {editOpen && (
+        <MetadataDialog
+          title="Edit album metadata"
+          fields={ALBUM_EDIT_FIELDS}
+          initialValues={{
+            album: album.album,
+            albumArtist: album.albumArtist,
+            genre: album.genre ?? '',
+            year: album.year ?? '',
+          }}
+          onSave={saveAlbumEdits}
+          onClose={() => setEditOpen(false)}
+        />
+      )}
     </div>
   );
 }

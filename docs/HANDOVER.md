@@ -112,6 +112,10 @@ Details per file: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) section 2.
   artist (`artist`), album views by `album_artist`.
 - **MusicBrainz** requires a `User-Agent` header (set in
   `metadataLookupService.js`) and allows ~1 request/second.
+- **Schema changes**: `db.js` applies idempotent `CREATE`s plus a `MIGRATIONS`
+  list (column additions checked via `PRAGMA table_info`). Add new columns
+  there, never by editing the `CREATE TABLE` alone — existing databases won't
+  be recreated.
 - **Lookup matching**: `metadataLookupService` fetches multiple candidates
   per provider and scores them (title/artist/duration/album similarity,
   threshold 0.45). Don't revert to first-hit-wins. The `provider` request

@@ -210,6 +210,75 @@ libraryRouter.get('/genres', (req, res) => {
   res.json(genres);
 });
 
+const HOME_SECTION_LIMIT = 12;
+
+/**
+ * Aggregated data for the start page: recently played, recently added,
+ * recommendations from the own library and the newest playlists.
+ * Recommendations are a local heuristic: unplayed tracks by the artists and
+ * genres the user plays and rates the most; if the library is (almost) fully
+ * played, the least-played tracks fill the list.
+ */
+libraryRouter.get('/home', (req, res) => {
+  const db = getDb();
+
+  const recentlyPlayed = db
+    .prepare('SELECT * FROM tracks WHERE last_played_at IS NOT NULL ORDER BY last_played_at DESC LIMIT ?')
+    .all(HOME_SECTION_LIMIT);
+
+  const recentlyAdded = db
+    .prepare('SELECT * FROM tracks ORDER BY created_at DESC, id DESC LIMIT ?')
+    .all(HOME_SECTION_LIMIT);
+
+  let recommendations = db
+    .prepare(
+      `WITH artist_affinity AS (
+         SELECT artist, SUM(play_count) + SUM(rating) * 2 AS weight
+         FROM tracks GROUP BY artist HAVING weight > 0
+       ),
+       genre_affinity AS (
+         SELECT genre, SUM(play_count) + SUM(rating) * 2 AS weight
+         FROM tracks WHERE genre IS NOT NULL GROUP BY genre HAVING weight > 0
+       )
+       SELECT t.*, COALESCE(aa.weight, 0) * 2 + COALESCE(ga.weight, 0) AS affinity
+       FROM tracks t
+       LEFT JOIN artist_affinity aa ON aa.artist = t.artist
+       LEFT JOIN genre_affinity ga ON ga.genre = t.genre
+       WHERE t.play_count = 0 AND (COALESCE(aa.weight, 0) + COALESCE(ga.weight, 0)) > 0
+       ORDER BY affinity DESC, t.rating DESC, RANDOM()
+       LIMIT ?`,
+    )
+    .all(HOME_SECTION_LIMIT);
+
+  if (recommendations.length < HOME_SECTION_LIMIT) {
+    const excludedIds = recommendations.map((track) => track.id);
+    const placeholders = excludedIds.length ? excludedIds.map(() => '?').join(',') : '-1';
+    const fill = db
+      .prepare(
+        `SELECT * FROM tracks WHERE id NOT IN (${placeholders})
+         ORDER BY play_count ASC, rating DESC, RANDOM() LIMIT ?`,
+      )
+      .all(...excludedIds, HOME_SECTION_LIMIT - recommendations.length);
+    recommendations = recommendations.concat(fill);
+  }
+
+  const newestPlaylists = db
+    .prepare(
+      `SELECT p.id, p.name, p.created_at AS createdAt,
+              COUNT(pt.track_id) AS trackCount,
+              MAX(t.artwork_file) AS artworkFile
+       FROM playlists p
+       LEFT JOIN playlist_tracks pt ON pt.playlist_id = p.id
+       LEFT JOIN tracks t ON t.id = pt.track_id
+       GROUP BY p.id
+       ORDER BY p.created_at DESC, p.id DESC
+       LIMIT ?`,
+    )
+    .all(HOME_SECTION_LIMIT);
+
+  res.json({ recentlyPlayed, recentlyAdded, recommendations, newestPlaylists });
+});
+
 libraryRouter.get('/stats', (req, res) => {
   const stats = getDb()
     .prepare(

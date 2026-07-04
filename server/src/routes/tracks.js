@@ -64,7 +64,9 @@ function requireTrack(req, res) {
 tracksRouter.get('/:id/stream', (req, res) => {
   const track = requireTrack(req, res);
   if (!track) return;
-  getDb().prepare('UPDATE tracks SET play_count = play_count + 1 WHERE id = ?').run(track.id);
+  getDb()
+    .prepare("UPDATE tracks SET play_count = play_count + 1, last_played_at = datetime('now') WHERE id = ?")
+    .run(track.id);
   res.sendFile(path.join(config.musicDir, track.file_path), {
     headers: { 'Content-Type': track.mime_type, 'Accept-Ranges': 'bytes' },
   });

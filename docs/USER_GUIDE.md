@@ -39,6 +39,9 @@ an `Artist/Album/` folder structure.
 
 Use the sidebar:
 
+- **Home** — the start page: recently played, recently added, recommendations
+  from your own library (unplayed songs by the artists and genres you play
+  and rate the most) and the newest playlists. Click a card to play it.
 - **Songs** — every track in one list.
 - **Albums** — a grid of album covers. Click an album to open it.
 - **Artists** — listed with artist photos (fetched automatically from Deezer

@@ -825,6 +825,60 @@ tr:hover .row-play {
   margin-top: 3px;
 }
 
+.home-section {
+  margin-bottom: 28px;
+}
+
+.home-section h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
+.home-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.home-card {
+  flex: 0 0 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+}
+
+.home-card .artwork {
+  width: 150px;
+  height: 150px;
+  border-radius: 10px;
+}
+
+.home-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-card-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .metadata-form {
   display: flex;
   flex-direction: column;

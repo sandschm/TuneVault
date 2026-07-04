@@ -24,6 +24,7 @@ entity tracks {
   artwork_file : TEXT <<file in covers/>>
   * created_at : TEXT
   * play_count : INTEGER
+  last_played_at : TEXT
 }
 
 entity playlists {

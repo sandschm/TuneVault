@@ -12,9 +12,10 @@ import GenresView from './components/views/GenresView.jsx';
 import PlaylistView from './components/views/PlaylistView.jsx';
 import PlaylistsManageView from './components/views/PlaylistsManageView.jsx';
 import SearchView from './components/views/SearchView.jsx';
+import HomeView from './components/views/HomeView.jsx';
 
 export default function App() {
-  const [view, setView] = useState({ name: 'songs' });
+  const [view, setView] = useState({ name: 'home' });
   const [playlists, setPlaylists] = useState([]);
   const [search, setSearch] = useState('');
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -73,6 +74,7 @@ export default function App() {
         />
         <main className="content">
           {searching && <SearchView {...viewProps} key={`search-${libraryVersion}`} search={search.trim()} />}
+          {!searching && view.name === 'home' && <HomeView {...viewProps} />}
           {!searching && view.name === 'songs' && <SongsView {...viewProps} />}
           {!searching && view.name === 'favorites' && <SongsView {...viewProps} favoritesOnly />}
           {!searching && view.name === 'artist' && <SongsView {...viewProps} artist={view.params.artist} />}

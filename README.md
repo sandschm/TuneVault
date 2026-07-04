@@ -11,6 +11,8 @@ look and feel.
 
 - **Import via upload** — drag & drop or file picker; tags (ID3, Vorbis, MP4) and
   embedded cover art are read automatically
+- **Start page** — recently played, recently added, library-based
+  recommendations and the newest playlists
 - **Browse** by songs, albums, song artists and genres — artist views show
   artist photos (looked up via the free Deezer API, cached locally)
 - **Global search** across artists, albums and song titles with grouped results

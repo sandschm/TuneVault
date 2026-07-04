@@ -1,4 +1,5 @@
 const LIBRARY_ITEMS = [
+  { name: 'home', label: 'Home', icon: '⌂' },
   { name: 'songs', label: 'Songs', icon: '♫' },
   { name: 'albums', label: 'Albums', icon: '▦' },
   { name: 'artists', label: 'Artists', icon: '👤' },

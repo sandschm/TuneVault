@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS tracks (
   bitrate       INTEGER,
   artwork_file  TEXT,
   created_at    TEXT NOT NULL DEFAULT (datetime('now')),
-  play_count    INTEGER NOT NULL DEFAULT 0
+  play_count    INTEGER NOT NULL DEFAULT 0,
+  last_played_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS playlists (
@@ -41,6 +42,20 @@ CREATE INDEX IF NOT EXISTS idx_tracks_artist ON tracks(artist);
 CREATE INDEX IF NOT EXISTS idx_tracks_genre  ON tracks(genre);
 `;
 
+/** Idempotent column additions for databases created by older versions. */
+const MIGRATIONS = [
+  { table: 'tracks', column: 'last_played_at', ddl: 'ALTER TABLE tracks ADD COLUMN last_played_at TEXT' },
+];
+
+function applyMigrations(database) {
+  for (const migration of MIGRATIONS) {
+    const columns = database.prepare(`PRAGMA table_info(${migration.table})`).all();
+    if (!columns.some((column) => column.name === migration.column)) {
+      database.exec(migration.ddl);
+    }
+  }
+}
+
 let db;
 
 export function getDb() {
@@ -50,6 +65,7 @@ export function getDb() {
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
     db.exec(SCHEMA);
+    applyMigrations(db);
   }
   return db;
 }

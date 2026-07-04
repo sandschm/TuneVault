@@ -29,6 +29,7 @@ export const api = {
   artists: () => request('/api/library/artists'),
   genres: () => request('/api/library/genres'),
   stats: () => request('/api/library/stats'),
+  home: () => request('/api/library/home'),
   searchLibrary: (query) => request(`/api/library/search?${new URLSearchParams({ q: query })}`),
   updateAlbum: (albumArtist, album, fields) =>
     request('/api/library/albums', { method: 'PATCH', body: { albumArtist, album, fields } }),

@@ -140,6 +140,7 @@ playing while the user navigates.
 
 `provider` is optional: `auto` (default), `itunes`, `deezer` or `musicbrainz`.
 | GET    | `/api/library/artists` | song-artist aggregates (groups by `artist`) |
+| GET    | `/api/library/home` | start page data: recently played/added, library recommendations, newest playlists |
 | GET    | `/api/library/genres` / `/stats` | aggregates |
 | GET    | `/api/library/search?q=` | grouped search: artists, albums, tracks |
 | GET/POST | `/api/playlists` | list / create |

@@ -28,8 +28,7 @@ the artist photos.
 The repository has two remotes:
 
 - `origin` — LAN git server (`ssh://192.168.11.9:6611/TuneVault.git`)
-- `github` — GitHub mirror (created via `gh repo create TuneVault --private
-  --source . --remote github --push`)
+- `github` — GitHub mirror (`git@github.com:sandschm/TuneVault.git`)
 
 ```bash
 # push to both after committing

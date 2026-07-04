@@ -6,6 +6,7 @@ stars and play everything straight from the browser — with an Apple-Music-insp
 look and feel.
 
 ![Stack](https://img.shields.io/badge/stack-React%20%2B%20Express%20%2B%20SQLite-fa2d48)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Features
 
@@ -87,3 +88,7 @@ server — it serves the built client automatically.
 ## Supported audio formats
 
 MP3, M4A/AAC, FLAC, OGG/Opus, WAV
+
+## License
+
+[MIT](LICENSE)

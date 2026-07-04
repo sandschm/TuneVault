@@ -18,5 +18,6 @@
     "multer": "^2.0.1",
     "music-metadata": "^11.2.1",
     "node-taglib-sharp": "^6.0.3"
-  }
+  },
+  "license": "MIT"
 }

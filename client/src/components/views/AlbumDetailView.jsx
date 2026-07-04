@@ -33,6 +33,24 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
     }
   };
 
+  const overwriteAlbum = async () => {
+    if (
+      !window.confirm(
+        'Overwrite album name, album artist, genre and year of all songs on this album with looked-up values? Titles, artists and covers stay unchanged.',
+      )
+    ) {
+      return;
+    }
+    try {
+      const result = await api.overwriteAlbum(album.albumArtist, album.album);
+      window.alert(`Metadata for ${result.updatedTracks} songs overwritten from ${result.source} and saved into the files.`);
+      load();
+      onLibraryChanged();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  };
+
   const downloadCover = async () => {
     try {
       const result = await api.downloadAlbumCover(album.albumArtist, album.album);
@@ -68,6 +86,9 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
             </a>
             <button className="secondary-button" onClick={enrichAlbum}>
               Complete metadata
+            </button>
+            <button className="secondary-button" onClick={overwriteAlbum}>
+              Overwrite metadata
             </button>
             <button className="secondary-button" onClick={downloadCover}>
               Download cover

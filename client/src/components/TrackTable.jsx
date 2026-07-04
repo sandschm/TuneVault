@@ -106,6 +106,23 @@ export default function TrackTable({
     }
   };
 
+  const overwrite = async (track) => {
+    if (
+      !window.confirm(
+        'Overwrite album, album artist, genre, year and track number with looked-up values? Title, artist and cover stay unchanged.',
+      )
+    ) {
+      return;
+    }
+    try {
+      const { source } = await api.overwriteTrack(track.id);
+      window.alert(`Metadata overwritten from ${source} and saved into the file.`);
+      finishAction();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  };
+
   const downloadCover = async (track) => {
     try {
       const { source } = await api.downloadTrackCover(track.id);
@@ -224,6 +241,7 @@ export default function TrackTable({
                           Download
                         </a>
                         <button onClick={() => enrich(track)}>Complete metadata</button>
+                        <button onClick={() => overwrite(track)}>Overwrite metadata</button>
                         <button onClick={() => downloadCover(track)}>Download cover</button>
                         <AddToPlaylistOptions
                           playlists={playlists ?? []}

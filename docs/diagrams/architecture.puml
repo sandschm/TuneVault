@@ -24,6 +24,7 @@ node "Docker Container" {
     [archiveService] as sArchive
     [metadataLookupService] as sLookup
     [artworkService] as sArtwork
+    [artistImageService] as sArtistImg
     [enrichmentService] as sEnrich
     [tagWriterService] as sTagWriter
   }
@@ -33,11 +34,13 @@ node "Docker Container" {
 folder "/data (host volume)" {
   folder "music/ (audio files)" as musicFs
   folder "covers/ (album art)" as coversFs
+  folder "artists/ (artist photos)" as artistsFs
 }
 
 cloud "Open APIs" {
   [iTunes Search API] as itunes
   [MusicBrainz +\nCover Art Archive] as mb
+  [Deezer API] as deezer
 }
 
 user --> spa
@@ -62,6 +65,9 @@ sEnrich --> sArtwork
 sEnrich --> sTagWriter
 sLookup --> itunes
 sLookup --> mb
+rArtwork --> sArtistImg
+sArtistImg --> deezer
+sArtistImg --> artistsFs : cache artist photos
 
 sImport --> musicFs : store files
 sArtwork --> coversFs : store covers

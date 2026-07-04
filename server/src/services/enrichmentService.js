@@ -113,6 +113,65 @@ export async function enrichAlbum(albumArtist, album) {
 }
 
 /**
+ * Overwrites the track's album, album artist, genre, year and track number
+ * with values from open APIs. Title, artist and cover are never touched;
+ * fields the provider has no value for keep their existing value.
+ */
+export async function overwriteTrack(trackId) {
+  const track = findTrack(trackId);
+  const match = await lookupTrackMetadata(track);
+  if (!match) {
+    return null;
+  }
+
+  getDb()
+    .prepare(
+      `UPDATE tracks SET
+         genre = COALESCE(@genre, genre),
+         year = COALESCE(@year, year),
+         track_no = COALESCE(@trackNo, track_no),
+         album = COALESCE(@album, album),
+         album_artist = COALESCE(@albumArtist, album_artist)
+       WHERE id = @id`,
+    )
+    .run({ ...match, id: track.id });
+
+  const updated = findTrack(track.id);
+  persistTrackTags(updated);
+  return { track: updated, source: match.source };
+}
+
+/**
+ * Overwrites album name, album artist, genre and year for every track of an
+ * album with values from open APIs. Titles, artists and covers are never
+ * touched; fields the provider has no value for keep their existing value.
+ */
+export async function overwriteAlbum(albumArtist, album) {
+  const tracks = albumTracks(albumArtist, album);
+  if (!tracks.length) {
+    return null;
+  }
+  const match = await lookupAlbumMetadata(albumArtist, album);
+  if (!match) {
+    return null;
+  }
+
+  const updateStatement = getDb().prepare(
+    `UPDATE tracks SET
+       genre = COALESCE(@genre, genre),
+       year = COALESCE(@year, year),
+       album = COALESCE(@album, album),
+       album_artist = COALESCE(@albumArtist, album_artist)
+     WHERE id = @id`,
+  );
+  for (const track of tracks) {
+    updateStatement.run({ ...match, id: track.id });
+    persistTrackTags(findTrack(track.id));
+  }
+  return { source: match.source, updatedTracks: tracks.length };
+}
+
+/**
  * Fetches the cover for a single track from open APIs and embeds it into the
  * audio file, replacing an existing cover.
  */

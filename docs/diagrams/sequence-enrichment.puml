@@ -1,5 +1,5 @@
 @startuml sequence-enrichment
-title Completing Missing Metadata / Covers via Open APIs (persisted to files)
+title Completing / Overwriting Metadata and Covers via Open APIs (persisted to files)
 
 actor User
 participant "React SPA" as SPA
@@ -13,9 +13,9 @@ participant "tagWriterService" as TagWriter
 database "SQLite" as DB
 collections "Audio files\n/data/music" as Files
 
-User -> SPA : ••• -> Complete metadata / Download cover\n(or album buttons)
-SPA -> Route : POST /api/tracks/:id/enrich | /cover\nPOST /api/library/albums/enrich | /cover
-Route -> Enrich : enrichTrack / enrichAlbum /\ndownloadTrackCover / downloadAlbumCover
+User -> SPA : ••• -> Complete metadata / Overwrite metadata /\nDownload cover (or album buttons)
+SPA -> Route : POST /api/tracks/:id/enrich | /overwrite | /cover\nPOST /api/library/albums/enrich | /overwrite | /cover
+Route -> Enrich : enrichTrack / enrichAlbum /\noverwriteTrack / overwriteAlbum /\ndownloadTrackCover / downloadAlbumCover
 Enrich -> Lookup : track or album lookup
 Lookup -> ITunes : GET /search
 alt iTunes match
@@ -25,10 +25,10 @@ else no match / error
   MB --> Lookup : metadata (cover via CAA)
 end
 Lookup --> Enrich : best match or null
-Enrich -> DB : UPDATE tracks (fill MISSING fields only)
+Enrich -> DB : UPDATE tracks\n(enrich: fill MISSING fields only,\noverwrite: replace album/albumArtist/genre/year/trackNo,\nnever title/artist)
 Enrich -> TagWriter : writeTags(file, merged metadata)
 TagWriter -> Files : save ID3/Vorbis/MP4 tags
-opt cover needed (enrich: only if none, cover download: replace)
+opt cover needed (enrich: only if none, cover download: replace, overwrite: never)
   Enrich -> Art : fetchArtwork(url)
   Art --> Enrich : image bytes
   Enrich -> Art : storeArtwork -> covers/<sha1>

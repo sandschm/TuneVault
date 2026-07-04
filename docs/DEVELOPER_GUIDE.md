@@ -20,7 +20,8 @@ Docker):
 /data
 ├── library.db          # SQLite database (tracks, playlists)
 ├── music/              # audio files: Artist/Album/NN Title.ext
-└── covers/             # album art, deduplicated by SHA-1 content hash
+├── covers/             # album art, deduplicated by SHA-1 content hash
+└── artists/            # artist photos from Deezer, cached by SHA-1 of the name
 ```
 
 ## 2. Architecture
@@ -50,10 +51,11 @@ routes/
   library.js             # derived views: albums, artists, genres, stats + album zip
   playlists.js           # playlist CRUD, membership, ordering, zip download
   uploads.js             # multipart upload endpoint (multer)
-  artwork.js             # serves cover images with immutable caching
+  artwork.js             # serves cover images (immutable caching) + artist photos
 services/
   importService.js       # tag parsing, file placement, track insertion
   artworkService.js      # store/dedupe/fetch cover images
+  artistImageService.js  # artist photos via Deezer, disk cache in artists/
   archiveService.js      # streams ZIP archives (albums, playlists, selections)
   metadataLookupService.js  # provider chain: iTunes Search API -> MusicBrainz
                             # (track-level and album-level lookups)
@@ -126,11 +128,13 @@ playing while the user navigates.
 | DELETE | `/api/tracks/:id` | remove track + file |
 | POST   | `/api/tracks/delete-batch` `{trackIds}` | remove several tracks + files |
 | POST   | `/api/tracks/:id/enrich` | fill missing metadata (persists into file) |
+| POST   | `/api/tracks/:id/overwrite` | overwrite album/albumArtist/genre/year/trackNo with looked-up values (persists into file) |
 | POST   | `/api/tracks/:id/cover` | fetch cover, embed into file |
 | GET    | `/api/library/albums[?albumArtist=&genre=]` | album aggregates |
 | GET    | `/api/library/albums/tracks?albumArtist=&album=` | songs of an album |
 | GET    | `/api/library/albums/download?albumArtist=&album=` | album as ZIP |
 | POST   | `/api/library/albums/enrich` `{albumArtist, album}` | fill missing metadata for all album tracks (persists into files) |
+| POST   | `/api/library/albums/overwrite` `{albumArtist, album}` | overwrite album/albumArtist/genre/year of all album tracks with looked-up values (persists into files) |
 | POST   | `/api/library/albums/cover` `{albumArtist, album}` | fetch album cover, embed into all files |
 | GET    | `/api/library/artists` | song-artist aggregates (groups by `artist`) |
 | GET    | `/api/library/genres` / `/stats` | aggregates |
@@ -143,6 +147,7 @@ playing while the user navigates.
 | PUT    | `/api/playlists/:id/order` `{trackIds}` | reorder |
 | GET    | `/api/playlists/:id/download` | playlist as ZIP |
 | POST   | `/api/uploads` (multipart `files`) | import audio files |
+| GET    | `/api/artwork/artist/:name` | artist photo (lazy Deezer lookup, cached on disk; 404 if none) |
 | GET    | `/api/artwork/:fileName` | cover image |
 | GET    | `/api/health` | liveness probe |
 
@@ -200,9 +205,21 @@ Notes:
    `User-Agent`, max 1 req/s). Covers come from the Cover Art Archive by
    release id.
 
+Artist photos are separate: `artistImageService.js` queries the **Deezer API**
+(`https://api.deezer.com/search/artist`, no key, ~50 req/5 s) lazily when
+`GET /api/artwork/artist/:name` is first requested, caches the image on disk
+under `DATA_DIR/artists/` (SHA-1 of the lowercased name) and negative-caches
+misses in memory. Deezer's generic placeholder (URL contains `/artist//`)
+counts as a miss; the client then falls back to the round placeholder.
+
 Enrichment is **non-destructive**: only `NULL`/"Unknown" fields are filled and
-covers are only added when the track has none. The explicit *Download cover*
-actions are the exception — they intentionally **replace** existing covers.
+covers are only added when the track has none. Two explicit actions are the
+exception: *Download cover* intentionally **replaces** existing covers, and
+*Overwrite metadata* (`overwriteTrack`/`overwriteAlbum`) intentionally
+**replaces** album, album artist, genre, year (and track number for single
+tracks) with the looked-up values — title, artist and cover are never touched,
+and provider fields without a value keep the existing one (`COALESCE(provider,
+existing)`).
 
 All enrichment results are persisted twice by `enrichmentService`: into the
 SQLite row **and** into the audio file's tags via `tagWriterService`

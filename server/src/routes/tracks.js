@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { config } from '../config.js';
 import { getDb } from '../db.js';
 import { streamTracksAsZip } from '../services/archiveService.js';
-import { enrichTrack, downloadTrackCover } from '../services/enrichmentService.js';
+import { enrichTrack, overwriteTrack, downloadTrackCover } from '../services/enrichmentService.js';
 
 export const tracksRouter = Router();
 
@@ -113,6 +113,20 @@ tracksRouter.post('/:id/enrich', async (req, res, next) => {
   if (!track) return;
   try {
     const result = await enrichTrack(track.id);
+    if (!result) {
+      return res.status(404).json({ error: 'No metadata match found on iTunes or MusicBrainz' });
+    }
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+tracksRouter.post('/:id/overwrite', async (req, res, next) => {
+  const track = requireTrack(req, res);
+  if (!track) return;
+  try {
+    const result = await overwriteTrack(track.id);
     if (!result) {
       return res.status(404).json({ error: 'No metadata match found on iTunes or MusicBrainz' });
     }

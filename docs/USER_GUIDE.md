@@ -41,6 +41,8 @@ Use the sidebar:
 
 - **Songs** — every track in one list.
 - **Albums** — a grid of album covers. Click an album to open it.
+- **Artists** — listed with artist photos (fetched automatically from Deezer
+  and cached on the server; a placeholder is shown if no photo is found).
 - **Artists** — all **song artists** (from the track metadata, not the album
   artist) with song counts. Clicking an artist shows that artist's songs.
 - **Genres** — albums grouped by genre.
@@ -122,6 +124,11 @@ files themselves**, so the information survives exports and downloads.
   Existing tags are never overwritten.
 - **Whole album** — open the album and click **Complete metadata** to fill
   missing genre/year for all songs of the album at once.
+- **Overwrite metadata** — row menu **••• → Overwrite metadata** (song) or the
+  album's **Overwrite metadata** button *replace* existing values with the
+  looked-up ones: album, album artist, genre, year (and track number for a
+  single song). Titles, artists and covers are never touched. A confirmation
+  is required.
 - **Covers** — **••• → Download cover** (song) or the album's **Download
   cover** button fetch the cover art and embed it into the file(s), replacing
   an existing cover.

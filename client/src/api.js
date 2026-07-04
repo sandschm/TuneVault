@@ -17,6 +17,7 @@ export const api = {
   deleteTrack: (id) => request(`/api/tracks/${id}`, { method: 'DELETE' }),
   deleteTracks: (trackIds) => request('/api/tracks/delete-batch', { method: 'POST', body: { trackIds } }),
   enrichTrack: (id) => request(`/api/tracks/${id}/enrich`, { method: 'POST' }),
+  overwriteTrack: (id) => request(`/api/tracks/${id}/overwrite`, { method: 'POST' }),
   downloadTrackCover: (id) => request(`/api/tracks/${id}/cover`, { method: 'POST' }),
 
   albums: (params = {}) => request(`/api/library/albums?${new URLSearchParams(params)}`),
@@ -28,6 +29,8 @@ export const api = {
   searchLibrary: (query) => request(`/api/library/search?${new URLSearchParams({ q: query })}`),
   enrichAlbum: (albumArtist, album) =>
     request('/api/library/albums/enrich', { method: 'POST', body: { albumArtist, album } }),
+  overwriteAlbum: (albumArtist, album) =>
+    request('/api/library/albums/overwrite', { method: 'POST', body: { albumArtist, album } }),
   downloadAlbumCover: (albumArtist, album) =>
     request('/api/library/albums/cover', { method: 'POST', body: { albumArtist, album } }),
 
@@ -73,4 +76,5 @@ export const urls = {
     `/api/library/albums/download?${new URLSearchParams({ albumArtist, album })}`,
   downloadPlaylist: (playlistId) => `/api/playlists/${playlistId}/download`,
   artwork: (artworkFile) => `/api/artwork/${artworkFile}`,
+  artistImage: (artistName) => `/api/artwork/artist/${encodeURIComponent(artistName)}`,
 };

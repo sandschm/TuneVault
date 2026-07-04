@@ -20,7 +20,7 @@ diagrams in [diagrams/](diagrams).
 | PlantUML (optional) | any | rendering the architecture diagrams |
 
 No API keys are required — the metadata providers (iTunes Search API,
-MusicBrainz, Cover Art Archive) are free and keyless.
+MusicBrainz, Cover Art Archive, Deezer for artist photos) are free and keyless.
 
 ## 3. Getting the code onto the new machine
 
@@ -68,7 +68,8 @@ Everything persistent is under **one directory** (`DATA_DIR`, default
 data/
 ├── library.db   # SQLite: tracks, playlists, ratings, play counts
 ├── music/       # audio files as Artist/Album/NN Title.ext
-└── covers/      # cover images, deduplicated by SHA-1
+├── covers/      # cover images, deduplicated by SHA-1
+└── artists/     # artist photos from Deezer, cached by SHA-1 of the name
 ```
 
 Backup/move = copy this directory. Since v1.1 metadata and covers are also
@@ -97,8 +98,10 @@ Details per file: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) section 2.
 - **`importService.moveFile`** falls back from `rename` to copy+delete on
   `EXDEV` — required in containers (tmpfs → volume). Do not simplify.
 - **Enrichment semantics**: fill missing fields only; explicit *Download
-  cover* replaces covers. Both persist into DB **and** file tags via
-  `enrichmentService` → `tagWriterService`.
+  cover* replaces covers; explicit *Overwrite metadata* replaces
+  album/albumArtist/genre/year(/trackNo) but never title, artist or cover.
+  All persist into DB **and** file tags via `enrichmentService` →
+  `tagWriterService`.
 - **Navigation**: in `App.jsx` always navigate through `navigate()` (clears
   the search), never raw `setView`.
 - **Albums/artists/genres** are derived from `tracks` via `GROUP BY` —

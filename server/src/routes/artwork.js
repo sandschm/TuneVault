@@ -1,8 +1,21 @@
 import fs from 'node:fs';
 import { Router } from 'express';
 import { artworkPath } from '../services/artworkService.js';
+import { getArtistImage } from '../services/artistImageService.js';
 
 export const artworkRouter = Router();
+
+artworkRouter.get('/artist/:name', async (req, res, next) => {
+  try {
+    const filePath = await getArtistImage(req.params.name);
+    if (!filePath) {
+      return res.status(404).json({ error: 'No artist image found' });
+    }
+    res.sendFile(filePath, { headers: { 'Cache-Control': 'public, max-age=604800' } });
+  } catch (error) {
+    next(error);
+  }
+});
 
 artworkRouter.get('/:fileName', (req, res) => {
   const fileName = req.params.fileName;

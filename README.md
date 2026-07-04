@@ -11,7 +11,8 @@ look and feel.
 
 - **Import via upload** — drag & drop or file picker; tags (ID3, Vorbis, MP4) and
   embedded cover art are read automatically
-- **Browse** by songs, albums, song artists and genres
+- **Browse** by songs, albums, song artists and genres — artist views show
+  artist photos (looked up via the free Deezer API, cached locally)
 - **Global search** across artists, albums and song titles with grouped results
 - **Play** single songs, whole albums or playlists (shuffle, repeat, seek, volume)
 - **Playlists** — create (also on the fly while adding songs), rename, delete
@@ -23,6 +24,9 @@ look and feel.
 - **Metadata completion** — per song or per album; missing genre/year/album/cover
   looked up via the iTunes Search API and MusicBrainz/Cover Art Archive (free,
   no API key) and **persisted into the audio files**
+- **Metadata overwrite** — per song or per album; replaces album, album artist,
+  genre, year (and track number) with the looked-up values — titles, artists
+  and covers stay untouched
 - **Cover download** — per song or per album, embedded into the files
 - **Light & dark theme** — toggle in the top-right corner
 

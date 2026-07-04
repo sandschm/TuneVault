@@ -8,13 +8,14 @@ export const config = {
   dataDir,
   musicDir: path.join(dataDir, 'music'),
   coversDir: path.join(dataDir, 'covers'),
+  artistImagesDir: path.join(dataDir, 'artists'),
   databaseFile: path.join(dataDir, 'library.db'),
   clientDistDir: path.resolve(process.env.CLIENT_DIST ?? path.join(process.cwd(), '..', 'client', 'dist')),
   maxUploadSizeBytes: Number(process.env.MAX_UPLOAD_MB ?? 500) * 1024 * 1024,
 };
 
 export function ensureDataDirectories() {
-  for (const dir of [config.dataDir, config.musicDir, config.coversDir]) {
+  for (const dir of [config.dataDir, config.musicDir, config.coversDir, config.artistImagesDir]) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }

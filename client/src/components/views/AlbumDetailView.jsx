@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, urls } from '../../api.js';
 import { usePlayer } from '../../player/PlayerContext.jsx';
 import Artwork from '../Artwork.jsx';
+import ProviderSelect from '../ProviderSelect.jsx';
 import TrackTable from '../TrackTable.jsx';
 
 function formatTotal(seconds) {
@@ -12,6 +13,7 @@ function formatTotal(seconds) {
 export default function AlbumDetailView({ album, playlists, onNavigate, onLibraryChanged }) {
   const player = usePlayer();
   const [tracks, setTracks] = useState([]);
+  const [provider, setProvider] = useState('auto');
 
   const load = useCallback(() => {
     api.albumTracks(album.albumArtist, album.album).then(setTracks).catch(console.error);
@@ -24,7 +26,7 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
 
   const enrichAlbum = async () => {
     try {
-      const result = await api.enrichAlbum(album.albumArtist, album.album);
+      const result = await api.enrichAlbum(album.albumArtist, album.album, provider);
       window.alert(`Metadata for ${result.updatedTracks} songs completed from ${result.source} and saved into the files.`);
       load();
       onLibraryChanged();
@@ -42,7 +44,7 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
       return;
     }
     try {
-      const result = await api.overwriteAlbum(album.albumArtist, album.album);
+      const result = await api.overwriteAlbum(album.albumArtist, album.album, provider);
       window.alert(`Metadata for ${result.updatedTracks} songs overwritten from ${result.source} and saved into the files.`);
       load();
       onLibraryChanged();
@@ -53,7 +55,7 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
 
   const downloadCover = async () => {
     try {
-      const result = await api.downloadAlbumCover(album.albumArtist, album.album);
+      const result = await api.downloadAlbumCover(album.albumArtist, album.album, provider);
       window.alert(`Cover downloaded from ${result.source} and embedded into ${result.updatedTracks} files.`);
       load();
       onLibraryChanged();
@@ -84,6 +86,7 @@ export default function AlbumDetailView({ album, playlists, onNavigate, onLibrar
             <a className="secondary-button" href={urls.downloadAlbum(album.albumArtist, album.album)}>
               ⤓ Download
             </a>
+            <ProviderSelect value={provider} onChange={setProvider} />
             <button className="secondary-button" onClick={enrichAlbum}>
               Complete metadata
             </button>

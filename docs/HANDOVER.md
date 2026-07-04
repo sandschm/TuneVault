@@ -19,8 +19,9 @@ diagrams in [diagrams/](diagrams).
 | Docker **or** Podman | any recent | container image (developed/tested with Podman 5.8 on macOS arm64) |
 | PlantUML (optional) | any | rendering the architecture diagrams |
 
-No API keys are required — the metadata providers (iTunes Search API,
-MusicBrainz, Cover Art Archive, Deezer for artist photos) are free and keyless.
+No API keys are required — the metadata providers (iTunes Search API, Deezer,
+MusicBrainz, Cover Art Archive) are free and keyless. Deezer also supplies
+the artist photos.
 
 ## 3. Getting the code onto the new machine
 
@@ -109,6 +110,11 @@ Details per file: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) section 2.
   artist (`artist`), album views by `album_artist`.
 - **MusicBrainz** requires a `User-Agent` header (set in
   `metadataLookupService.js`) and allows ~1 request/second.
+- **Lookup matching**: `metadataLookupService` fetches multiple candidates
+  per provider and scores them (title/artist/duration/album similarity,
+  threshold 0.45). Don't revert to first-hit-wins. The `provider` request
+  parameter (`auto|itunes|deezer|musicbrainz`) is validated against
+  `METADATA_PROVIDERS`.
 
 ## 8. How to test changes
 

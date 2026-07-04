@@ -39,9 +39,9 @@ function applyCover(track, buffer, contentType) {
  * Fills the track's missing metadata from open APIs, writes the result to
  * the database and into the audio file. Existing values are never replaced.
  */
-export async function enrichTrack(trackId) {
+export async function enrichTrack(trackId, provider = 'auto') {
   const track = findTrack(trackId);
-  const match = await lookupTrackMetadata(track);
+  const match = await lookupTrackMetadata(track, provider);
   if (!match) {
     return null;
   }
@@ -77,12 +77,12 @@ export async function enrichTrack(trackId) {
  * Fills missing genre/year for every track of an album and applies the album
  * cover, persisting everything into the audio files.
  */
-export async function enrichAlbum(albumArtist, album) {
+export async function enrichAlbum(albumArtist, album, provider = 'auto') {
   const tracks = albumTracks(albumArtist, album);
   if (!tracks.length) {
     return null;
   }
-  const match = await lookupAlbumMetadata(albumArtist, album);
+  const match = await lookupAlbumMetadata(albumArtist, album, provider);
   if (!match) {
     return null;
   }
@@ -117,9 +117,9 @@ export async function enrichAlbum(albumArtist, album) {
  * with values from open APIs. Title, artist and cover are never touched;
  * fields the provider has no value for keep their existing value.
  */
-export async function overwriteTrack(trackId) {
+export async function overwriteTrack(trackId, provider = 'auto') {
   const track = findTrack(trackId);
-  const match = await lookupTrackMetadata(track);
+  const match = await lookupTrackMetadata(track, provider);
   if (!match) {
     return null;
   }
@@ -146,12 +146,12 @@ export async function overwriteTrack(trackId) {
  * album with values from open APIs. Titles, artists and covers are never
  * touched; fields the provider has no value for keep their existing value.
  */
-export async function overwriteAlbum(albumArtist, album) {
+export async function overwriteAlbum(albumArtist, album, provider = 'auto') {
   const tracks = albumTracks(albumArtist, album);
   if (!tracks.length) {
     return null;
   }
-  const match = await lookupAlbumMetadata(albumArtist, album);
+  const match = await lookupAlbumMetadata(albumArtist, album, provider);
   if (!match) {
     return null;
   }
@@ -175,9 +175,9 @@ export async function overwriteAlbum(albumArtist, album) {
  * Fetches the cover for a single track from open APIs and embeds it into the
  * audio file, replacing an existing cover.
  */
-export async function downloadTrackCover(trackId) {
+export async function downloadTrackCover(trackId, provider = 'auto') {
   const track = findTrack(trackId);
-  const match = await lookupTrackMetadata(track);
+  const match = await lookupTrackMetadata(track, provider);
   if (!match?.artworkUrl) {
     return null;
   }
@@ -190,12 +190,12 @@ export async function downloadTrackCover(trackId) {
  * Fetches the album cover from open APIs and embeds it into every track of
  * the album, replacing existing covers.
  */
-export async function downloadAlbumCover(albumArtist, album) {
+export async function downloadAlbumCover(albumArtist, album, provider = 'auto') {
   const tracks = albumTracks(albumArtist, album);
   if (!tracks.length) {
     return null;
   }
-  const match = await lookupAlbumMetadata(albumArtist, album);
+  const match = await lookupAlbumMetadata(albumArtist, album, provider);
   if (!match?.artworkUrl) {
     return null;
   }

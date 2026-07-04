@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api, urls } from '../api.js';
 import { usePlayer } from '../player/PlayerContext.jsx';
 import Artwork from './Artwork.jsx';
+import ProviderSelect from './ProviderSelect.jsx';
 import StarRating from './StarRating.jsx';
 
 function formatDuration(seconds) {
@@ -35,6 +36,7 @@ export default function TrackTable({
 }) {
   const player = usePlayer();
   const [menuTrackId, setMenuTrackId] = useState(null);
+  const [provider, setProvider] = useState('auto');
   const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [anchorIndex, setAnchorIndex] = useState(null);
@@ -98,7 +100,7 @@ export default function TrackTable({
 
   const enrich = async (track) => {
     try {
-      const { source } = await api.enrichTrack(track.id);
+      const { source } = await api.enrichTrack(track.id, provider);
       window.alert(`Metadata updated from ${source} and saved into the file.`);
       finishAction();
     } catch (error) {
@@ -115,7 +117,7 @@ export default function TrackTable({
       return;
     }
     try {
-      const { source } = await api.overwriteTrack(track.id);
+      const { source } = await api.overwriteTrack(track.id, provider);
       window.alert(`Metadata overwritten from ${source} and saved into the file.`);
       finishAction();
     } catch (error) {
@@ -125,7 +127,7 @@ export default function TrackTable({
 
   const downloadCover = async (track) => {
     try {
-      const { source } = await api.downloadTrackCover(track.id);
+      const { source } = await api.downloadTrackCover(track.id, provider);
       window.alert(`Cover downloaded from ${source} and embedded into the file.`);
       finishAction();
     } catch (error) {
@@ -240,6 +242,8 @@ export default function TrackTable({
                         <a href={urls.downloadTrack(track.id)} download>
                           Download
                         </a>
+                        <div className="row-menu-label">Metadata source</div>
+                        <ProviderSelect value={provider} onChange={setProvider} />
                         <button onClick={() => enrich(track)}>Complete metadata</button>
                         <button onClick={() => overwrite(track)}>Overwrite metadata</button>
                         <button onClick={() => downloadCover(track)}>Download cover</button>

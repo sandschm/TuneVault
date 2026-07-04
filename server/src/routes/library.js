@@ -2,6 +2,12 @@ import { Router } from 'express';
 import { getDb } from '../db.js';
 import { streamTracksAsZip } from '../services/archiveService.js';
 import { enrichAlbum, overwriteAlbum, downloadAlbumCover } from '../services/enrichmentService.js';
+import { METADATA_PROVIDERS } from '../services/metadataLookupService.js';
+
+function requestedProvider(req) {
+  const provider = req.body?.provider;
+  return METADATA_PROVIDERS.includes(provider) ? provider : 'auto';
+}
 
 export const libraryRouter = Router();
 
@@ -102,7 +108,7 @@ libraryRouter.get('/search', (req, res) => {
 
 libraryRouter.post('/albums/enrich', async (req, res, next) => {
   try {
-    const result = await enrichAlbum(req.body.albumArtist ?? '', req.body.album ?? '');
+    const result = await enrichAlbum(req.body.albumArtist ?? '', req.body.album ?? '', requestedProvider(req));
     if (!result) {
       return res.status(404).json({ error: 'Album not found or no metadata match on iTunes/MusicBrainz' });
     }
@@ -114,7 +120,7 @@ libraryRouter.post('/albums/enrich', async (req, res, next) => {
 
 libraryRouter.post('/albums/overwrite', async (req, res, next) => {
   try {
-    const result = await overwriteAlbum(req.body.albumArtist ?? '', req.body.album ?? '');
+    const result = await overwriteAlbum(req.body.albumArtist ?? '', req.body.album ?? '', requestedProvider(req));
     if (!result) {
       return res.status(404).json({ error: 'Album not found or no metadata match on iTunes/MusicBrainz' });
     }
@@ -126,7 +132,7 @@ libraryRouter.post('/albums/overwrite', async (req, res, next) => {
 
 libraryRouter.post('/albums/cover', async (req, res, next) => {
   try {
-    const result = await downloadAlbumCover(req.body.albumArtist ?? '', req.body.album ?? '');
+    const result = await downloadAlbumCover(req.body.albumArtist ?? '', req.body.album ?? '', requestedProvider(req));
     if (!result) {
       return res.status(404).json({ error: 'Album not found or no cover on iTunes/MusicBrainz' });
     }

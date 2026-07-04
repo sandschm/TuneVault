@@ -22,8 +22,11 @@ look and feel.
 - **Favorites** — rate songs with 1–5 stars, dedicated Favorites view
 - **Download** single songs, or albums and playlists as ZIP archives
 - **Metadata completion** — per song or per album; missing genre/year/album/cover
-  looked up via the iTunes Search API and MusicBrainz/Cover Art Archive (free,
-  no API key) and **persisted into the audio files**
+  looked up via the iTunes Search API, Deezer and MusicBrainz/Cover Art Archive
+  (free, no API key) and **persisted into the audio files**. Several candidates
+  are fetched and scored against the existing tags (title, artist, duration,
+  album), and a choicebox lets you pick the source (Auto/iTunes/Deezer/
+  MusicBrainz)
 - **Metadata overwrite** — per song or per album; replaces album, album artist,
   genre, year (and track number) with the looked-up values — titles, artists
   and covers stay untouched

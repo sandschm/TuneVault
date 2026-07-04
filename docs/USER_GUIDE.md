@@ -115,9 +115,17 @@ in the **Favorites** view.
 
 ## 10. Completing metadata and covers
 
-TuneVault uses the free **iTunes Search API** and **MusicBrainz / Cover Art
-Archive** — no API key needed. Everything fetched is written **into the audio
-files themselves**, so the information survives exports and downloads.
+TuneVault uses the free **iTunes Search API**, **Deezer** and **MusicBrainz /
+Cover Art Archive** — no API key needed. For every lookup several candidates
+are fetched and scored against your existing tags (title, artist, duration,
+album); only a sufficiently confident match is applied. Everything fetched is
+written **into the audio files themselves**, so the information survives
+exports and downloads.
+
+A **metadata source choicebox** sits next to the actions (in the song's •••
+menu and in the album header): *Auto (best match)* compares all providers,
+or pick iTunes, Deezer or MusicBrainz explicitly if a provider keeps
+returning the wrong match.
 
 - **Single song** — row menu **••• → Complete metadata** fills the *missing*
   fields (genre, year, album, …) and fetches a cover if the song has none.

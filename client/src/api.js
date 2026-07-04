@@ -16,9 +16,12 @@ export const api = {
   updateTrack: (id, fields) => request(`/api/tracks/${id}`, { method: 'PATCH', body: fields }),
   deleteTrack: (id) => request(`/api/tracks/${id}`, { method: 'DELETE' }),
   deleteTracks: (trackIds) => request('/api/tracks/delete-batch', { method: 'POST', body: { trackIds } }),
-  enrichTrack: (id) => request(`/api/tracks/${id}/enrich`, { method: 'POST' }),
-  overwriteTrack: (id) => request(`/api/tracks/${id}/overwrite`, { method: 'POST' }),
-  downloadTrackCover: (id) => request(`/api/tracks/${id}/cover`, { method: 'POST' }),
+  enrichTrack: (id, provider = 'auto') =>
+    request(`/api/tracks/${id}/enrich`, { method: 'POST', body: { provider } }),
+  overwriteTrack: (id, provider = 'auto') =>
+    request(`/api/tracks/${id}/overwrite`, { method: 'POST', body: { provider } }),
+  downloadTrackCover: (id, provider = 'auto') =>
+    request(`/api/tracks/${id}/cover`, { method: 'POST', body: { provider } }),
 
   albums: (params = {}) => request(`/api/library/albums?${new URLSearchParams(params)}`),
   albumTracks: (albumArtist, album) =>
@@ -27,12 +30,12 @@ export const api = {
   genres: () => request('/api/library/genres'),
   stats: () => request('/api/library/stats'),
   searchLibrary: (query) => request(`/api/library/search?${new URLSearchParams({ q: query })}`),
-  enrichAlbum: (albumArtist, album) =>
-    request('/api/library/albums/enrich', { method: 'POST', body: { albumArtist, album } }),
-  overwriteAlbum: (albumArtist, album) =>
-    request('/api/library/albums/overwrite', { method: 'POST', body: { albumArtist, album } }),
-  downloadAlbumCover: (albumArtist, album) =>
-    request('/api/library/albums/cover', { method: 'POST', body: { albumArtist, album } }),
+  enrichAlbum: (albumArtist, album, provider = 'auto') =>
+    request('/api/library/albums/enrich', { method: 'POST', body: { albumArtist, album, provider } }),
+  overwriteAlbum: (albumArtist, album, provider = 'auto') =>
+    request('/api/library/albums/overwrite', { method: 'POST', body: { albumArtist, album, provider } }),
+  downloadAlbumCover: (albumArtist, album, provider = 'auto') =>
+    request('/api/library/albums/cover', { method: 'POST', body: { albumArtist, album, provider } }),
 
   playlists: () => request('/api/playlists'),
   createPlaylist: (name) => request('/api/playlists', { method: 'POST', body: { name } }),

@@ -65,6 +65,7 @@ sEnrich --> sArtwork
 sEnrich --> sTagWriter
 sLookup --> itunes
 sLookup --> mb
+sLookup --> deezer
 rArtwork --> sArtistImg
 sArtistImg --> deezer
 sArtistImg --> artistsFs : cache artist photos

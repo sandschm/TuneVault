@@ -127,15 +127,17 @@ playing while the user navigates.
 | PATCH  | `/api/tracks/:id` | edit tags / set `rating` (0–5) |
 | DELETE | `/api/tracks/:id` | remove track + file |
 | POST   | `/api/tracks/delete-batch` `{trackIds}` | remove several tracks + files |
-| POST   | `/api/tracks/:id/enrich` | fill missing metadata (persists into file) |
-| POST   | `/api/tracks/:id/overwrite` | overwrite album/albumArtist/genre/year/trackNo with looked-up values (persists into file) |
-| POST   | `/api/tracks/:id/cover` | fetch cover, embed into file |
+| POST   | `/api/tracks/:id/enrich` `{provider?}` | fill missing metadata (persists into file) |
+| POST   | `/api/tracks/:id/overwrite` `{provider?}` | overwrite album/albumArtist/genre/year/trackNo with looked-up values (persists into file) |
+| POST   | `/api/tracks/:id/cover` `{provider?}` | fetch cover, embed into file |
 | GET    | `/api/library/albums[?albumArtist=&genre=]` | album aggregates |
 | GET    | `/api/library/albums/tracks?albumArtist=&album=` | songs of an album |
 | GET    | `/api/library/albums/download?albumArtist=&album=` | album as ZIP |
-| POST   | `/api/library/albums/enrich` `{albumArtist, album}` | fill missing metadata for all album tracks (persists into files) |
-| POST   | `/api/library/albums/overwrite` `{albumArtist, album}` | overwrite album/albumArtist/genre/year of all album tracks with looked-up values (persists into files) |
-| POST   | `/api/library/albums/cover` `{albumArtist, album}` | fetch album cover, embed into all files |
+| POST   | `/api/library/albums/enrich` `{albumArtist, album, provider?}` | fill missing metadata for all album tracks (persists into files) |
+| POST   | `/api/library/albums/overwrite` `{albumArtist, album, provider?}` | overwrite album/albumArtist/genre/year of all album tracks with looked-up values (persists into files) |
+| POST   | `/api/library/albums/cover` `{albumArtist, album, provider?}` | fetch album cover, embed into all files |
+
+`provider` is optional: `auto` (default), `itunes`, `deezer` or `musicbrainz`.
 | GET    | `/api/library/artists` | song-artist aggregates (groups by `artist`) |
 | GET    | `/api/library/genres` / `/stats` | aggregates |
 | GET    | `/api/library/search?q=` | grouped search: artists, albums, tracks |
@@ -197,11 +199,21 @@ Notes:
 
 ## 6. External metadata APIs
 
-`metadataLookupService.js` tries providers in order and returns the first hit:
+`metadataLookupService.js` fetches up to 5 candidates per provider, scores
+each against the track's existing tags and returns the best match above a
+confidence threshold (0.45). Scoring is a weighted average of normalized
+Levenshtein similarity for title (4), artist (3), album (1) plus a duration
+comparison (2, full score within ±3 s); components that can't be compared
+(e.g. "Unknown Artist") are skipped. The `provider` parameter
+(`auto|itunes|deezer|musicbrainz`, exported as `METADATA_PROVIDERS`) narrows
+the search to one provider; `auto` queries all and picks the global best.
 
 1. **iTunes Search API** — `https://itunes.apple.com/search` (no key, rate
    limit ~20 req/min). Artwork URL is upgraded from 100×100 to 600×600.
-2. **MusicBrainz** — `https://musicbrainz.org/ws/2/recording` (requires a
+2. **Deezer** — `https://api.deezer.com/search/track` / `search/album` (no
+   key, ~50 req/5 s). Genre/year live on the album object, so the winning
+   candidate triggers one extra `album/:id` request (lazy `resolve` hook).
+3. **MusicBrainz** — `https://musicbrainz.org/ws/2/recording` (requires a
    `User-Agent`, max 1 req/s). Covers come from the Cover Art Archive by
    release id.
 

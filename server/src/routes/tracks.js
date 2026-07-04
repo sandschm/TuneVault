@@ -5,6 +5,12 @@ import { config } from '../config.js';
 import { getDb } from '../db.js';
 import { streamTracksAsZip } from '../services/archiveService.js';
 import { enrichTrack, overwriteTrack, downloadTrackCover } from '../services/enrichmentService.js';
+import { METADATA_PROVIDERS } from '../services/metadataLookupService.js';
+
+function requestedProvider(req) {
+  const provider = req.body?.provider;
+  return METADATA_PROVIDERS.includes(provider) ? provider : 'auto';
+}
 
 export const tracksRouter = Router();
 
@@ -112,7 +118,7 @@ tracksRouter.post('/:id/enrich', async (req, res, next) => {
   const track = requireTrack(req, res);
   if (!track) return;
   try {
-    const result = await enrichTrack(track.id);
+    const result = await enrichTrack(track.id, requestedProvider(req));
     if (!result) {
       return res.status(404).json({ error: 'No metadata match found on iTunes or MusicBrainz' });
     }
@@ -126,7 +132,7 @@ tracksRouter.post('/:id/overwrite', async (req, res, next) => {
   const track = requireTrack(req, res);
   if (!track) return;
   try {
-    const result = await overwriteTrack(track.id);
+    const result = await overwriteTrack(track.id, requestedProvider(req));
     if (!result) {
       return res.status(404).json({ error: 'No metadata match found on iTunes or MusicBrainz' });
     }
@@ -140,7 +146,7 @@ tracksRouter.post('/:id/cover', async (req, res, next) => {
   const track = requireTrack(req, res);
   if (!track) return;
   try {
-    const result = await downloadTrackCover(track.id);
+    const result = await downloadTrackCover(track.id, requestedProvider(req));
     if (!result) {
       return res.status(404).json({ error: 'No cover found on iTunes or MusicBrainz' });
     }

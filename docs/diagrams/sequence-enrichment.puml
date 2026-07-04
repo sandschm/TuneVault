@@ -7,6 +7,7 @@ participant "tracks / library route" as Route
 participant "enrichmentService" as Enrich
 participant "metadataLookupService" as Lookup
 participant "iTunes Search API" as ITunes
+participant "Deezer API" as Deezer
 participant "MusicBrainz /\nCover Art Archive" as MB
 participant "artworkService" as Art
 participant "tagWriterService" as TagWriter
@@ -17,13 +18,16 @@ User -> SPA : ••• -> Complete metadata / Overwrite metadata /\nDownload co
 SPA -> Route : POST /api/tracks/:id/enrich | /overwrite | /cover\nPOST /api/library/albums/enrich | /overwrite | /cover
 Route -> Enrich : enrichTrack / enrichAlbum /\noverwriteTrack / overwriteAlbum /\ndownloadTrackCover / downloadAlbumCover
 Enrich -> Lookup : track or album lookup
-Lookup -> ITunes : GET /search
-alt iTunes match
-  ITunes --> Lookup : metadata + artworkUrl
-else no match / error
+note right of Lookup : provider = auto | itunes |\ndeezer | musicbrainz\n(from UI choicebox)
+loop selected provider(s), up to 5 candidates each
+  Lookup -> ITunes : GET /search
+  ITunes --> Lookup : candidates
+  Lookup -> Deezer : GET /search/track | /search/album
+  Deezer --> Lookup : candidates
   Lookup -> MB : GET /ws/2/recording | /release
-  MB --> Lookup : metadata (cover via CAA)
+  MB --> Lookup : candidates (cover via CAA)
 end
+Lookup -> Lookup : score candidates vs existing tags\n(title/artist/duration/album, threshold 0.45)
 Lookup --> Enrich : best match or null
 Enrich -> DB : UPDATE tracks\n(enrich: fill MISSING fields only,\noverwrite: replace album/albumArtist/genre/year/trackNo,\nnever title/artist)
 Enrich -> TagWriter : writeTags(file, merged metadata)

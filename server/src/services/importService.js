@@ -4,6 +4,7 @@ import { parseFile } from 'music-metadata';
 import { config } from '../config.js';
 import { getDb } from '../db.js';
 import { storeArtwork } from './artworkService.js';
+import { normalizeGenre } from './genreNormalizationService.js';
 
 const SUPPORTED_EXTENSIONS = new Set(['.mp3', '.m4a', '.aac', '.flac', '.ogg', '.opus', '.wav']);
 
@@ -59,7 +60,7 @@ function extractTags(metadata, fallbackTitle) {
     artist: common.artist?.trim() || 'Unknown Artist',
     albumArtist: common.albumartist?.trim() || common.artist?.trim() || 'Unknown Artist',
     album: common.album?.trim() || 'Unknown Album',
-    genre: common.genre?.[0]?.trim() || null,
+    genre: normalizeGenre(common.genre?.[0]),
     year: common.year ?? null,
     trackNo: common.track?.no ?? null,
     discNo: common.disk?.no ?? null,

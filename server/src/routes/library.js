@@ -4,6 +4,7 @@ import { streamTracksAsZip } from '../services/archiveService.js';
 import { enrichAlbum, overwriteAlbum, downloadAlbumCover } from '../services/enrichmentService.js';
 import { METADATA_PROVIDERS } from '../services/metadataLookupService.js';
 import { writeTags } from '../services/tagWriterService.js';
+import { normalizeGenre } from '../services/genreNormalizationService.js';
 
 function requestedProvider(req) {
   const provider = req.body?.provider;
@@ -122,7 +123,7 @@ libraryRouter.patch('/albums', (req, res) => {
     updates.album_artist = fields.albumArtist.trim();
   }
   if ('genre' in fields) {
-    updates.genre = typeof fields.genre === 'string' && fields.genre.trim() ? fields.genre.trim() : null;
+    updates.genre = typeof fields.genre === 'string' ? normalizeGenre(fields.genre) : null;
   }
   if ('year' in fields) {
     const year = Number(fields.year);

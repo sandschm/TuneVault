@@ -25,6 +25,7 @@ node "Docker Container" {
     [metadataLookupService] as sLookup
     [artworkService] as sArtwork
     [artistImageService] as sArtistImg
+    [genreNormalizationService] as sGenre
     [enrichmentService] as sEnrich
     [tagWriterService] as sTagWriter
   }
@@ -69,6 +70,10 @@ sLookup --> deezer
 rArtwork --> sArtistImg
 sArtistImg --> deezer
 sArtistImg --> artistsFs : cache artist photos
+sImport --> sGenre
+sLookup --> sGenre
+rTracks --> sGenre
+rLibrary --> sGenre
 
 sImport --> musicFs : store files
 sArtwork --> coversFs : store covers

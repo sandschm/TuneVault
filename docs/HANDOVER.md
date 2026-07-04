@@ -112,6 +112,11 @@ Details per file: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) section 2.
   artist (`artist`), album views by `album_artist`.
 - **MusicBrainz** requires a `User-Agent` header (set in
   `metadataLookupService.js`) and allows ~1 request/second.
+- **Genres are English-only internally**: `genreNormalizationService`
+  translates German genre names on every write path (import, lookup matches,
+  manual edits) and normalizes existing rows once at startup. Extend the
+  `GENRE_TRANSLATIONS` map there — never store untranslated German names.
+  File tags catch up on the next tag write per track.
 - **Schema changes**: `db.js` applies idempotent `CREATE`s plus a `MIGRATIONS`
   list (column additions checked via `PRAGMA table_info`). Add new columns
   there, never by editing the `CREATE TABLE` alone — existing databases won't

@@ -7,6 +7,7 @@ import { streamTracksAsZip } from '../services/archiveService.js';
 import { enrichTrack, overwriteTrack, downloadTrackCover } from '../services/enrichmentService.js';
 import { METADATA_PROVIDERS } from '../services/metadataLookupService.js';
 import { writeTags } from '../services/tagWriterService.js';
+import { normalizeGenre } from '../services/genreNormalizationService.js';
 
 function requestedProvider(req) {
   const provider = req.body?.provider;
@@ -105,6 +106,9 @@ tracksRouter.patch('/:id', (req, res) => {
 
   const assignments = updates.map((field) => `${field} = @${field}`).join(', ');
   const values = Object.fromEntries(updates.map((field) => [field, req.body[field]]));
+  if ('genre' in values) {
+    values.genre = normalizeGenre(values.genre);
+  }
   getDb().prepare(`UPDATE tracks SET ${assignments} WHERE id = @id`).run({ ...values, id: track.id });
 
   const updated = findTrack(track.id);

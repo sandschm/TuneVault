@@ -46,6 +46,9 @@ Use the sidebar:
 - **Albums** — a grid of album covers. Click an album to open it.
 - **Artists** — listed with artist photos (fetched automatically from Deezer
   and cached on the server; a placeholder is shown if no photo is found).
+- **Genres** — genre names are normalized to English: German names (e.g.
+  "Klassik", "Weltmusik") are translated automatically on import, lookup and
+  manual edits, so each genre appears only once.
 - **Artists** — all **song artists** (from the track metadata, not the album
   artist) with song counts. Clicking an artist shows that artist's songs.
 - **Genres** — albums grouped by genre.

@@ -1,3 +1,5 @@
+import { normalizeGenre } from './genreNormalizationService.js';
+
 const USER_AGENT = 'TuneVault/1.0 (self-hosted music library)';
 const CANDIDATE_LIMIT = 5;
 const MINIMUM_SCORE = 0.45;
@@ -56,6 +58,7 @@ async function findBestMatch(providerMap, provider, score, searchArgs) {
     }
     delete match.resolve;
   }
+  match.genre = normalizeGenre(match.genre);
   return match;
 }
 

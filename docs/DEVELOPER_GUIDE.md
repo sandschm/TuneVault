@@ -56,6 +56,8 @@ services/
   importService.js       # tag parsing, file placement, track insertion
   artworkService.js      # store/dedupe/fetch cover images
   artistImageService.js  # artist photos via Deezer, disk cache in artists/
+  genreNormalizationService.js  # German -> English genre names; applied on
+                                # every write path + once at startup
   archiveService.js      # streams ZIP archives (albums, playlists, selections)
   metadataLookupService.js  # provider chain: iTunes Search API -> MusicBrainz
                             # (track-level and album-level lookups)

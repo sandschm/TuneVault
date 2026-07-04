@@ -1,5 +1,6 @@
 import Database from 'better-sqlite3';
 import { config, ensureDataDirectories } from './config.js';
+import { normalizeStoredGenres } from './services/genreNormalizationService.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS tracks (
@@ -66,6 +67,7 @@ export function getDb() {
     db.pragma('foreign_keys = ON');
     db.exec(SCHEMA);
     applyMigrations(db);
+    normalizeStoredGenres(db);
   }
   return db;
 }

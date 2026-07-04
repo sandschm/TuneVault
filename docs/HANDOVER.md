@@ -25,18 +25,18 @@ the artist photos.
 
 ## 3. Getting the code onto the new machine
 
-The project lives in a local git repository (`git init` was done; no remote is
-configured yet). To transfer:
+The repository has two remotes:
+
+- `origin` — LAN git server (`ssh://192.168.11.9:6611/TuneVault.git`)
+- `github` — GitHub mirror (created via `gh repo create TuneVault --private
+  --source . --remote github --push`)
 
 ```bash
-# on this machine: commit and push to a remote of your choice
-cd tunevault
-git add -A && git commit -m "TuneVault"
-git remote add origin <your-remote-url>
-git push -u origin main
+# push to both after committing
+git push origin main && git push github main
 
-# on the new machine
-git clone <your-remote-url>
+# on the new machine, clone from either remote
+git clone <remote-url>
 ```
 
 Alternatively copy the folder — everything except `node_modules/`, `client/dist/`
